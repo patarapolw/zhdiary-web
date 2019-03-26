@@ -19,9 +19,9 @@ router.get("/callback", (req, res, next) => {
             if (_err) { return next(_err); }
             res.locals.user = req.user;
 
-            const returnTo = req.session!.returnTo;
+            // const returnTo = req.session!.returnTo;
             delete req.session!.returnTo;
-            res.redirect(returnTo || "/");
+            res.redirect("/");
         });
     })(req, res, next);
 });
