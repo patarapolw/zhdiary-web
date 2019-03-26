@@ -16,28 +16,30 @@ let q: string = "";
 
 const mediaQuery = matchMedia("(max-width: 1000px), (screen and (-webkit-device-pixel-ratio:3)))");
 
-mediaQuery.addListener((e) => {
+function readMq(mq: MediaQueryListEvent | MediaQueryList = mediaQuery) {
     const $app = $("#App");
     const $quizArea = $("#QuizArea");
     const $deckColumn = $("#DeckColumn");
 
-    if (e.matches && !$quizArea.hasClass("hidden")) {
+    if (mq.matches && !$quizArea.hasClass("hidden")) {
         $quizArea.removeClass("col-9");
         $deckColumn.addClass("hidden");
-        $app.addClass("container");
+        $app.addClass("container").removeClass("container-fluid");
     } else {
         $quizArea.addClass("col-9");
         $deckColumn.removeClass("hidden");
-        $app.removeClass("container");
+        $app.removeClass("container").addClass("container-fluid");
     }
-});
+}
+
+mediaQuery.addListener(readMq);
 
 export function initDeckViewer() {
     const $app = $("#App");
 
     q = "";
     $app.addClass("container").html(`
-    <div class="row height-100">
+    <div class="row height-100 no-wrap">
         <div id="DeckColumn" class="animate col-12">
             <input id="search-bar" class="form-control mt-3"
             placeholder="Type here to search">
@@ -150,11 +152,7 @@ async function loadJstree() {
             $deckColumn.removeClass("col-12").addClass("col-3").addClass("border-right");
             setTimeout(() => {
                 $quizArea.removeClass("hidden");
-                if (mediaQuery.matches) {
-                    $quizArea.removeClass("col-9");
-                    $deckColumn.addClass("hidden");
-                    $app.addClass("container");
-                }
+                readMq();
             }, 400);
         });
     });
