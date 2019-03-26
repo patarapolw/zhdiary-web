@@ -14,13 +14,13 @@ let uuidToDeck = {} as any;
 let jstree: any = null;
 let q: string = "";
 
-const $app = $("#App");
-const $quizArea = $("#QuizArea");
-const $deckColumn = $("#DeckColumn");
-
 const mediaQuery = matchMedia("(max-width: 1000px), (screen and (-webkit-device-pixel-ratio:3)))");
 
 mediaQuery.addListener((e) => {
+    const $app = $("#App");
+    const $quizArea = $("#QuizArea");
+    const $deckColumn = $("#DeckColumn");
+
     if (e.matches && !$quizArea.hasClass("hidden")) {
         $quizArea.removeClass("col-9");
         $deckColumn.addClass("hidden");
@@ -33,6 +33,8 @@ mediaQuery.addListener((e) => {
 });
 
 export function initDeckViewer() {
+    const $app = $("#App");
+
     q = "";
     $app.addClass("container").html(`
     <div class="row height-100">
@@ -76,6 +78,10 @@ export function destroyDeckViewer() {
 }
 
 async function loadJstree() {
+    const $app = $("#App");
+    const $quizArea = $("#QuizArea");
+    const $deckColumn = $("#DeckColumn");
+
     const deckList = await fetchJSON("/deck/filter", {q});
 
     if (deckList.length === 0) {
@@ -203,6 +209,8 @@ async function nodeAddStat(id: string) {
 }
 
 async function initQuiz(id: string) {
+    const $quizArea = $("#QuizArea");
+
     const deck = uuidToDeck[id];
     const cardIds = await fetchJSON("/quiz/", {deck, q});
     const quizAreaEl = document.getElementById("QuizArea") as HTMLDivElement;
