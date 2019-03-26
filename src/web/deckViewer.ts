@@ -19,11 +19,9 @@ const mediaQuery = matchMedia("(max-width: 1000px), (screen and (-webkit-device-
 mediaQuery.addListener((e) => {
     const $quizArea = $("#QuizArea");
 
-    if (e.matches) {
-        if (!$quizArea.hasClass("hidden")) {
-            $quizArea.removeClass("col-9");
-            $("#DeckColumn").addClass("hidden");
-        }
+    if (e.matches && !$quizArea.hasClass("hidden")) {
+        $quizArea.removeClass("col-9");
+        $("#DeckColumn").addClass("hidden");
     } else {
         $quizArea.addClass("col-9");
         $("#DeckColumn").removeClass("hidden");
@@ -41,7 +39,7 @@ export function initDeckViewer() {
             placeholder="Type here to search">
             <div id="DeckArea" class="col-12"></div>
         </div>
-        <div id="QuizArea" class="col-auto hidden"></div>
+        <div id="QuizArea" class="col-9 hidden"></div>
     </div>`);
     const $nav = $("nav");
     if ($nav.length > 0) {
@@ -143,7 +141,12 @@ async function loadJstree() {
             $("#App").removeClass("container").addClass("container-fluid");
             $("#DeckColumn").removeClass("col-12").addClass("col-3").addClass("border-right");
             setTimeout(() => {
-                $("#QuizArea").removeClass("hidden");
+                const $quizArea = $("#QuizArea");
+                $quizArea.removeClass("hidden");
+                if (mediaQuery.matches) {
+                    $quizArea.removeClass("col-9");
+                    $("#DeckColumn").addClass("hidden");
+                }
             }, 400);
         });
     });
