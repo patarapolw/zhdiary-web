@@ -46,7 +46,10 @@ class QuizController {
                 c.srsLevel = QuizResource.srsMap.length - 1;
             }
             c.nextReview = QuizResource.getNextReview(c.srsLevel);
-            db.card.updateOne({_id}, c);
+            db.card.updateOne({_id}, {$set: {
+                srsLevel: c.srsLevel,
+                nextReview: c.nextReview
+            }});
         });
 
         return res.sendStatus(201);
@@ -62,7 +65,10 @@ class QuizController {
                 c.srsLevel = 0;
             }
             c.nextReview = QuizResource.repeat();
-            db.card.updateOne({_id}, c);
+            db.card.updateOne({_id}, {$set: {
+                srsLevel: c.srsLevel,
+                nextReview: c.nextReview
+            }});
         });
 
         return res.sendStatus(201);

@@ -3,9 +3,13 @@
 @import "~simplemde/dist/simplemde.min";
 @import "~flatpickr/dist/flatpickr";
 
-html, body, #App, .height-100 {
+html, body, .height-100 {
     height: 100%;
     overflow: hidden;
+}
+
+#App {
+    height: calc(100% - 50px);
 }
 
 .tree-score-child {

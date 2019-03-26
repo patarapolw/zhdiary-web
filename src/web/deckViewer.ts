@@ -47,10 +47,10 @@ export function initDeckViewer() {
         </div>
         <div id="QuizArea" class="col-9 hidden"></div>
     </div>`);
-    const $nav = $("nav");
-    if ($nav.length > 0) {
-        $app.css("height", `calc(100% - ${$nav[0].offsetHeight}px`);
-    }
+    // const $nav = $("nav");
+    // if ($nav.length > 0) {
+    //     $app.css("height", `calc(100% - ${$nav[0].offsetHeight}px`);
+    // }
     loadJstree();
 
     $("#search-bar").on("input", (e) => {
