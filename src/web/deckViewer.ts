@@ -14,7 +14,7 @@ let uuidToDeck = {} as any;
 let jstree: any = null;
 let q: string = "";
 
-const mediaQuery = matchMedia("(max-width: 800px)");
+const mediaQuery = matchMedia("(max-width: 1000px), (screen and (-webkit-device-pixel-ratio:3)))");
 
 mediaQuery.addListener((e) => {
     const $quizArea = $("#QuizArea");
