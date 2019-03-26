@@ -1,0 +1,13 @@
+.pointer {
+    cursor: pointer;
+}
+
+img {
+    max-width: 100%;
+    height: auto;
+}
+
+.content {
+    height: 90%;
+    overflow: scroll;
+}
