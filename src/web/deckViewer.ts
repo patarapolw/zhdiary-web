@@ -14,24 +14,26 @@ let uuidToDeck = {} as any;
 let jstree: any = null;
 let q: string = "";
 
+const $app = $("#App");
+const $quizArea = $("#QuizArea");
+const $deckColumn = $("#DeckColumn");
+
 const mediaQuery = matchMedia("(max-width: 1000px), (screen and (-webkit-device-pixel-ratio:3)))");
 
 mediaQuery.addListener((e) => {
-    const $quizArea = $("#QuizArea");
-
     if (e.matches && !$quizArea.hasClass("hidden")) {
         $quizArea.removeClass("col-9");
-        $("#DeckColumn").addClass("hidden");
+        $deckColumn.addClass("hidden");
+        $app.addClass("container");
     } else {
         $quizArea.addClass("col-9");
-        $("#DeckColumn").removeClass("hidden");
+        $deckColumn.removeClass("hidden");
+        $app.removeClass("container");
     }
 });
 
 export function initDeckViewer() {
     q = "";
-    const $app = $("#App");
-
     $app.addClass("container").html(`
     <div class="row height-100">
         <div id="DeckColumn" class="animate col-12">
@@ -138,14 +140,14 @@ async function loadJstree() {
         })
         .bind("select_node.jstree", (e: any, current: any) => {
             initQuiz(current.node.id);
-            $("#App").removeClass("container").addClass("container-fluid");
-            $("#DeckColumn").removeClass("col-12").addClass("col-3").addClass("border-right");
+            $app.removeClass("container").addClass("container-fluid");
+            $deckColumn.removeClass("col-12").addClass("col-3").addClass("border-right");
             setTimeout(() => {
-                const $quizArea = $("#QuizArea");
                 $quizArea.removeClass("hidden");
                 if (mediaQuery.matches) {
                     $quizArea.removeClass("col-9");
-                    $("#DeckColumn").addClass("hidden");
+                    $deckColumn.addClass("hidden");
+                    $app.addClass("container");
                 }
             }, 400);
         });
@@ -204,7 +206,6 @@ async function initQuiz(id: string) {
     const deck = uuidToDeck[id];
     const cardIds = await fetchJSON("/quiz/", {deck, q});
     const quizAreaEl = document.getElementById("QuizArea") as HTMLDivElement;
-    const $quizArea = $(quizAreaEl);
 
     $quizArea.html(`<div>${cardIds.length} entries to go...</div>`);
     if (cardIds.length > 0) {
