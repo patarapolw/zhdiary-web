@@ -1,17 +1,17 @@
 import $ from "jquery";
 import tingle from "tingle.js";
-import SimpleMDE from "simplemde";
 import "bootstrap";
 import flatpickr from "flatpickr";
 import "./dbEditor.scss";
 import { toTitle, fetchJSON } from "../util";
+import Quill from "quill";
 
 export interface IColumn {
     name: string;
     width: number;
     readOnly?: boolean;
     label?: string;
-    type?: "one-line" |  "multi-line" | "markdown" | "number" | "datetime" | "list";
+    type?: "one-line" |  "multi-line" | "html" | "number" | "datetime" | "list";
     newEntry?: boolean;
     editEntry?: boolean;
     separator?: string;
@@ -28,15 +28,15 @@ export interface IDbEditorSettings {
     templateApi?: string;
     readOnly?: boolean;
     newEntry?: boolean;
-    convert?: (x: string, v?: string) => string;
+    theme?: string;
 }
 
 export interface IJqList {
     [key: string]: JQuery;
 }
 
-export interface IMdeList {
-    [key: string]: SimpleMDE;
+export interface IQuillList {
+    [key: string]: Quill;
 }
 
 export interface IModalList {
@@ -54,7 +54,7 @@ export class DbEditor {
     };
 
     private $el: IJqList = {};
-    private mde: IMdeList = {};
+    private quill: IQuillList = {};
     private modal: IModalList = {};
     private current = {
         vocab: ""
@@ -63,6 +63,7 @@ export class DbEditor {
     constructor(settings: IDbEditorSettings) {
         this.settings = settings;
         this.$el.main = $(settings.el);
+        this.$el.main.removeClass("container").removeClass("container-fluid");
 
         if ($("nav").length === 0) {
             this.$el.main.prepend(`
@@ -163,12 +164,13 @@ export class DbEditor {
                             </div>
                         </div>`);
                         break;
-                    case "markdown":
+                    case "html":
                     default:
                         this.$el[col.name] = $(`
                         <div class="form-group">
                             <label>${toTitle(col.name)}</label>
-                            <textarea class="form-control" rows="3"
+                            <div class="db-editor-quill"></div>
+                            <textarea class="form-control db-editor-quill-textarea h-0" tabindex="-1"
                             name="${col.name}" ${col.required ? "required" : ""}></textarea>
                         </div>"`);
                 }
@@ -183,9 +185,9 @@ export class DbEditor {
                                 if (t) {
                                     for (const col2 of settings.columns) {
                                         if (t[col2.name]) {
-                                            if (col2.type === "markdown") {
-                                                this.mde[col2.name].value(t[col2.name]);
-                                                setTimeout(() => this.mde[col2.name].codemirror.refresh(), 0);
+                                            if (col2.type === "html") {
+                                                this.quill[col2.name].setText("");
+                                                this.quill[col2.name].clipboard.dangerouslyPasteHTML(0, t[col2.name]);
                                             }
                                         }
                                     }
@@ -214,24 +216,14 @@ export class DbEditor {
                     this.$el.newEntry.removeClass("was-validated");
 
                     for (const col of settings.columns) {
-                        if (col.type === "markdown") {
-                            this.mde[col.name].value("");
-
-                            if (this.mde[col.name].isFullscreenActive()) {
-                                SimpleMDE.toggleFullScreen(this.mde[col.name]);
-                            }
-
-                            if (this.mde[col.name].isPreviewActive()) {
-                                SimpleMDE.togglePreview(this.mde[col.name]);
-                            }
-
-                            setTimeout(() => this.mde[col.name].codemirror.refresh(), 0);
+                        if (col.type === "html") {
+                            this.quill[col.name].setText("");
                         }
                     }
                 },
                 onClose: () => {
                     (this.$el.newEntry.get(0) as HTMLFormElement).reset();
-                    Object.values(this.mde).forEach((el) => el.value(""));
+                    Object.values(this.quill).forEach((el) => el.setText(""));
                 }
             });
 
@@ -239,8 +231,10 @@ export class DbEditor {
             this.modal.newEntry.setContent(this.$el.newEntry.get(0));
             this.modal.newEntry.addFooterBtn("Save", "tingle-btn tingle-btn--primary", () => {
                 for (const col of this.settings.columns) {
-                    if (col.type === "markdown") {
-                        $("input, textarea", this.$el[col.name]).val(this.mde[col.name].value());
+                    if (col.type === "html") {
+                        const qRoot = this.quill[col.name].root;
+                        const val = qRoot.innerText.trim() ? qRoot.innerHTML : "";
+                        $("input, textarea", this.$el[col.name]).val(val);
                     }
                 }
 
@@ -274,11 +268,12 @@ export class DbEditor {
         }
 
         if (!settings.readOnly) {
-            this.$el.mdEditor = $(`
-            <div class="db-editor-md-editor">
-                <textarea></textarea>
+            this.$el.mainEditor = $(`
+            <div class="db-editor-main-editor">
+                <textarea class="hidden"></textarea>
+                <div class="db-editor-quill"></div>
             </div>`);
-            this.$el.main.append(this.$el.mdEditor);
+            this.$el.main.append(this.$el.mainEditor);
 
             this.$el.listEditor = $(`
             <form class="db-editor-list-editor">
@@ -289,56 +284,39 @@ export class DbEditor {
             </form>`);
             this.$el.main.append(this.$el.listEditor);
 
-            this.mde.mdEditor = new SimpleMDE({
-                element: $("textarea", this.$el.mdEditor).get(0),
-                spellChecker: false,
-                previewRender: (md) => {
-                    return settings.convert!(md, this.current.vocab);
-                }
+            this.quill.mainEditor = new Quill($(".db-editor-quill", this.$el.mainEditor).get(0), {
+                theme: settings.theme || "snow"
             });
 
             for (const col of this.settings.columns) {
-                if (col.type === "markdown") {
+                if (col.type === "html") {
                     if (typeof col.newEntry === "boolean" && !col.newEntry) {
                         continue;
                     }
 
-                    this.mde[col.name] = new SimpleMDE({
-                        element: $("textarea", this.$el[col.name]).get(0),
-                        spellChecker: false,
-                        previewRender: (md) => {
-                            return settings.convert!(md, this.current.vocab);
-                        }
+                    this.quill[col.name] = new Quill($(".db-editor-quill", this.$el[col.name]).get(0), {
+                        theme: settings.theme || "snow"
                     });
                 }
             }
 
-            this.modal.mdEditor = new tingle.modal({
+            this.modal.mainEditor = new tingle.modal({
                 footer: true,
                 stickyFooter: false,
                 closeMethods: ["button", "escape"],
-                onOpen: () => {
-                    if (this.mde.mdEditor.isFullscreenActive()) {
-                        SimpleMDE.toggleFullScreen(this.mde.mdEditor);
-                    }
-
-                    if (this.mde.mdEditor.isPreviewActive()) {
-                        SimpleMDE.togglePreview(this.mde.mdEditor);
-                    }
-                },
-                onClose: () => this.mde.mdEditor.value("")
+                onClose: () => this.quill.mainEditor.setText("")
             });
-            this.modal.mdEditor.setContent(this.$el.mdEditor.get(0));
-            this.modal.mdEditor.addFooterBtn("Save", "tingle-btn tingle-btn--primary", () => {
-                const val = this.mde.mdEditor.value();
-                const $target = this.$el.mdEditor.data("$target");
+            this.modal.mainEditor.setContent(this.$el.mainEditor.get(0));
+            this.modal.mainEditor.addFooterBtn("Save", "tingle-btn tingle-btn--primary", () => {
+                const qRoot = this.quill.mainEditor.root;
+                const val = qRoot.innerText.trim() ? qRoot.innerHTML : "";
+                const $target = this.$el.mainEditor.data("$target");
                 const $cellWrapper = $target.find(".cell-wrapper");
-                const convertFn = settings.convert;
 
                 this.updateServer($target, val)
-                .then(() => convertFn ? $cellWrapper.html(convertFn(val)) : $cellWrapper.text(val));
+                .then(() => $cellWrapper.html(val));
 
-                this.modal.mdEditor.close();
+                this.modal.mainEditor.close();
             });
 
             this.modal.listEditor = new tingle.modal({
@@ -350,7 +328,7 @@ export class DbEditor {
             this.modal.listEditor.setContent(this.$el.listEditor.get(0));
             this.modal.listEditor.addFooterBtn("Save", "tingle-btn tingle-btn--primary", () => {
                 const ls = $(".db-editor-list-entry input").toArray().map((el) => $(el).val()).filter((el) => el).sort();
-                const $target = this.$el.mdEditor.data("$target");
+                const $target = this.$el.mainEditor.data("$target");
                 const $cellWrapper = $target.find(".cell-wrapper");
 
                 this.updateServer($target, ls)
@@ -409,11 +387,11 @@ export class DbEditor {
                     return;
                 }
 
-                if (col.type === "markdown") {
-                    this.mde.mdEditor.value(fieldData);
-                    this.$el.mdEditor.data("$target", $target);
-                    setTimeout(() => this.mde.mdEditor.codemirror.refresh(), 0);
-                    this.modal.mdEditor.open();
+                if (col.type === "html") {
+                    this.quill.mainEditor.setText("");
+                    this.quill.mainEditor.clipboard.dangerouslyPasteHTML(0, fieldData);
+                    this.$el.mainEditor.data("$target", $target);
+                    this.modal.mainEditor.open();
                     return;
                 }
 
@@ -493,7 +471,11 @@ export class DbEditor {
         let id: string = entry.id;
         if (isNew) {
             try {
-                id = (await fetchJSON(this.settings.endpoint, {create: entry}, "PUT")).id;
+                const r = (await fetchJSON(this.settings.endpoint, {create: entry}, "PUT"));
+                if (!r) {
+                    return;
+                }
+                id = r.id;
             } catch (e) {
                 alert("Not created.");
                 return;
@@ -527,8 +509,8 @@ export class DbEditor {
                 const $cellWrapper = $(`<div class="cell-wrapper">`);
                 $seg.append($cellWrapper);
 
-                if (col.type === "markdown") {
-                    $cellWrapper.html(this.settings.convert!(data, entry.vocab));
+                if (col.type === "html") {
+                    $cellWrapper.html(data);
                 } else {
                     $cellWrapper.text(data);
                 }
@@ -541,9 +523,13 @@ export class DbEditor {
         }
 
         $tr.data("id", id);
-        $tr.data("vocab", entry.vocab);
 
-        isNew ? this.$el.tbody.prepend($tr) : this.$el.tbody.append($tr);
+        if (isNew) {
+            $tr.addClass("new");
+            this.$el.tbody.prepend($tr);
+        } else {
+            this.$el.tbody.append($tr);
+        }
     }
 
     private async updateServer($target: JQuery, val: any): Promise<JQuery | null> {
@@ -554,7 +540,7 @@ export class DbEditor {
                 fieldData: val
             }, "PUT");
         } catch (e) {
-            alert("Not updated.");
+            // alert("Not updated.");
             return null;
         }
 
@@ -663,9 +649,9 @@ export class DbEditor {
             const no = col.parse(val);
             this.updateServer($target, no)
             .then(() => $cellWrapper.text(no !== null ? no : ""));
-        } else if (col.type === "markdown") {
+        } else if (col.type === "html") {
             this.updateServer($el.data("$target"), val)
-            .then(() => $cellWrapper.html(this.settings.convert!(val)));
+            .then(() => $cellWrapper.html(val));
         } else {
             this.updateServer($el.data("$target"), val)
             .then(() => $cellWrapper.text(val));

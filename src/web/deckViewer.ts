@@ -2,11 +2,11 @@ import "bootstrap";
 import $ from "jquery";
 import "jstree";
 import uuid from "uuid/v4";
-import { shuffle, md2html, fetchJSON, toTitle } from "./util";
+import { shuffle, fetchJSON, toTitle } from "./util";
 import "./deckViewer/deckViewer.scss";
 import "jstree/dist/themes/default/style.min.css";
-import { IDbEditorSettings, IJqList, IMdeList, IModalList } from "./dbEditor/dbEditor";
-import SimpleMDE from "simplemde";
+import { IDbEditorSettings, IJqList, IQuillList, IModalList } from "./dbEditor/dbEditor";
+import Quill from "quill";
 import tingle from "tingle.js";
 import flatpickr from "flatpickr";
 
@@ -62,14 +62,13 @@ export function initDeckViewer() {
         el: $app[0],
         endpoint: "/editor/card/",
         templateApi: "/template/",
-        convert: (s) => md2html(s),
         columns: [
             {name: "deck", width: 200, type: "one-line", required: true},
             {name: "template", width: 150, type: "one-line"},
-            {name: "front", width: 500, type: "markdown", required: true},
-            {name: "back", width: 500, type: "markdown"},
+            {name: "front", width: 500, type: "html", required: true},
+            {name: "back", width: 500, type: "html"},
             {name: "tag", width: 150, type: "list", separator: " "},
-            {name: "note", width: 300, type: "markdown"},
+            {name: "note", width: 300, type: "html"},
             {name: "srsLevel", width: 150, type: "number", label: "SRS Level"},
             {name: "nextReview", width: 200, type: "datetime", label: "Next Review"}
         ]
@@ -223,8 +222,8 @@ async function initQuiz(id: string) {
 
             const $parent = $(`
             <div class="c-container">
-                <div class="c-all c-data-front">${md2html(c.front)}</div>
-                <div class="c-back c-data-back">${md2html(c.back || "")}</div>
+                <div class="c-all c-data-front">${c.front}</div>
+                <div class="c-back c-data-back">${c.back || ""}</div>
                 <div class="c-btn-list mt-3 mb-3">
                     <button class="btn btn-primary c-front c-btn-show">Show</button>
                     <button class="btn btn-success c-back c-btn-right">Right</button>
@@ -289,7 +288,7 @@ class EntryEditor {
     private settings: IDbEditorSettings;
 
     private $el: IJqList = {};
-    private mde: IMdeList = {};
+    private quill: IQuillList = {};
     private modal: IModalList = {};
     private current = {
         vocab: ""
@@ -323,12 +322,13 @@ class EntryEditor {
                         </div>
                     </div>`);
                     break;
-                case "markdown":
+                case "html":
                 default:
                     this.$el[col.name] = $(`
                     <div class="form-group">
                         <label>${toTitle(col.name)}</label>
-                        <textarea class="form-control" rows="3"
+                        <div class="db-editor-quill"></div>
+                        <textarea class="form-control h-0"
                         name="${col.name}" ${col.required ? "required" : ""}></textarea>
                     </div>"`);
             }
@@ -339,13 +339,9 @@ class EntryEditor {
                     enableTime: true,
                     dateFormat: "Y-M-d H:i"
                 });
-            } else if (col.type === "markdown") {
-                this.mde[col.name] = new SimpleMDE({
-                    element: $("textarea", this.$el[col.name]).get(0),
-                    spellChecker: false,
-                    previewRender: (md) => {
-                        return settings.convert!(md, this.current.vocab);
-                    }
+            } else if (col.type === "html") {
+                this.quill[col.name] = new Quill($(".db-editor-quill", this.$el[col.name]).get(0), {
+                    theme: settings.theme || "snow"
                 });
             }
 
@@ -357,9 +353,9 @@ class EntryEditor {
                             if (t) {
                                 for (const col2 of settings.columns) {
                                     if (t[col2.name]) {
-                                        if (col2.type === "markdown") {
-                                            this.mde[col2.name].value(t[col2.name]);
-                                            setTimeout(() => this.mde[col2.name].codemirror.refresh(), 0);
+                                        if (col2.type === "html") {
+                                            this.quill[col2.name].setText("");
+                                            this.quill[col2.name].clipboard.dangerouslyPasteHTML(0, t[col2.name]);
                                         }
                                     }
                                 }
@@ -384,32 +380,19 @@ class EntryEditor {
             footer: true,
             stickyFooter: false,
             closeMethods: ["button", "escape"],
-            onOpen: () => {
-                for (const col of settings.columns) {
-                    if (col.type === "markdown") {
-                        if (this.mde[col.name].isFullscreenActive()) {
-                            SimpleMDE.toggleFullScreen(this.mde[col.name]);
-                        }
-
-                        if (this.mde[col.name].isPreviewActive()) {
-                            SimpleMDE.togglePreview(this.mde[col.name]);
-                        }
-
-                        setTimeout(() => this.mde[col.name].codemirror.refresh(), 0);
-                    }
-                }
-            },
             onClose: () => {
                 (this.$el.editEntry.get(0) as HTMLFormElement).reset();
-                Object.values(this.mde).forEach((el) => el.value(""));
+                Object.values(this.quill).forEach((el) => el.setText(""));
             }
         });
 
         this.modal.editEntry.setContent(this.$el.editEntry.get(0));
         this.modal.editEntry.addFooterBtn("Save", "tingle-btn tingle-btn--primary", () => {
             for (const col of this.settings.columns) {
-                if (col.type === "markdown") {
-                    $("textarea", this.$el[col.name]).val(this.mde[col.name].value());
+                if (col.type === "html") {
+                    const qRoot = this.quill[col.name].root;
+                    const val = qRoot.innerText.trim() ? qRoot.innerHTML : "";
+                    $("textarea", this.$el[col.name]).val(val);
                 }
             }
 
@@ -462,8 +445,9 @@ class EntryEditor {
                         case "list":
                             $("input", this.$el[col.name]).val(entry[col.name].join(col.separator || " "));
                             break;
-                        case "markdown":
-                            this.mde[col.name].value(entry[col.name] || "");
+                        case "html":
+                            this.quill[col.name].setText("");
+                            this.quill[col.name].clipboard.dangerouslyPasteHTML(entry[col.name] || "");
                             break;
                         case "datetime":
                             // @ts-ignore
@@ -480,8 +464,8 @@ class EntryEditor {
     }
 
     private updateEntry(entry: any, $container: JQuery) {
-        $(".c-data-front", $container).html(this.settings.convert!(entry.front));
-        $(".c-data-back", $container).html(this.settings.convert!(entry.back || ""));
+        $(".c-data-front", $container).html(entry.front);
+        $(".c-data-back", $container).html(entry.back || "");
         console.log($container.data("id"));
         fetchJSON(this.settings.endpoint, {
             id: $container.data("id"),

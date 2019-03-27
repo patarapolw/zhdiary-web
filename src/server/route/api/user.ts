@@ -3,6 +3,7 @@ import asyncHandler from "express-async-handler";
 import Database, { ICard } from "../../db";
 import { ObjectID } from "bson";
 import moment from "moment";
+import { md2html } from "../../util";
 
 const router = Router();
 
@@ -10,7 +11,8 @@ router.post("/card",  asyncHandler(async (req, res) => {
     const userId = new ObjectID((req as any).payload.id);
     const db = new Database();
 
-    let decks: string[] = req.body.map((c: any) => {
+    const fromMarkdown = req.body.fromMarkdown;
+    let decks: string[] = req.body.data.map((c: any) => {
         const {deck} = c;
         return deck;
     });
@@ -23,11 +25,14 @@ router.post("/card",  asyncHandler(async (req, res) => {
             {upsert: true, returnOriginal: false});
     }))).map((d) => d.value!._id!);
 
-    const cards: ICard[] = req.body.map((c: any) => {
+    const cards: ICard[] = req.body.data.map((c: any) => {
         const {front, back, note, tag, srsLevel, nextReview, vocab, template, deck} = c;
         return {
             userId,
-            front, back, note, tag, srsLevel,
+            front: fromMarkdown ? md2html(front) : front,
+            back: fromMarkdown ? md2html(back) : back,
+            note: fromMarkdown ? md2html(note) : note,
+            tag, srsLevel,
             nextReview: moment(nextReview).toDate(),
             template: template ? template : `v/${vocab}`,
             deckId: deckIds[decks.indexOf(deck)]

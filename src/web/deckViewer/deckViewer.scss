@@ -1,6 +1,6 @@
 @import "~bootstrap/scss/bootstrap.scss";
 @import "~tingle.js/src/tingle";
-@import "~simplemde/dist/simplemde.min";
+@import "~quill/dist/quill.snow";
 @import "~flatpickr/dist/flatpickr";
 
 html, body, .height-100 {
@@ -61,25 +61,9 @@ pre {
     white-space: pre-wrap;
 }
 
-.CodeMirror,
-.CodeMirror-scroll,
-.CodeMirror-fullscreen.CodeMirror, 
-.editor-preview-side {
-    max-height: 80% !important;
-    height: 80% !important;
-    overflow: scroll;
-}
-
 .db-editor-md-editor {
     height: 500px;
     overflow: scroll;
-}
-
-form {
-    .CodeMirror, .CodeMirror-scroll {
-        min-height: 100px !important;
-        height: 100px !important;
-    }
 }
   
 .clear {

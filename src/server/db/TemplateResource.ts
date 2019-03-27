@@ -6,6 +6,7 @@ import Database, { IVocab, ISentence } from ".";
 import cheerio from "cheerio";
 import fetch from "node-fetch";
 import jieba from "nodejieba";
+import { md2html } from "../util";
 
 export class TemplateResource {
     public static async get(templateName: string): Promise<ITemplate | null> {
@@ -129,8 +130,8 @@ export interface ITemplateMap {
 
 export const templateMap = {
     "^v/[^/]+(?:/(\\d+))?$": {
-        front: "{{#v.english}}### {{{v.english}}}{{/v.english}}",
-        back: `
+        front: md2html("{{#v.english}}### {{{v.english}}}{{/v.english}}"),
+        back: md2html(`
 ## {{{v.simplified}}}
 
 {{#v.traditional}}### {{{v.traditional}}}
@@ -140,16 +141,16 @@ export const templateMap = {
 {{#s}}
 - {{{chinese}}}
     - {{{english}}}
-{{/s}}`.trim()
+{{/s}}`.trim())
     },
     "^s/[^/]+$": {
-        front: "### {{{sentence}}}",
-        back: `
+        front: md2html("### {{{sentence}}}"),
+        back: md2html(`
 {{{pinyin}}}
 
 {{#vocab}}
 - [{{{simplified}}}](https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb={{{simplified}}}){{#traditional}} {{{traditional}}}{{/traditional}} [{{{pinyin}}}]{{#english}} {{{english}}}{{/english}}
-{{/vocab}}`.trim()
+{{/vocab}}`.trim())
     }
 } as ITemplateMap;
 

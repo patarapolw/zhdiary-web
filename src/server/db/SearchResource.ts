@@ -32,6 +32,7 @@ export class SearchResource {
             }},
             {$unwind: "$d"},
             {$project: {
+                template: 1,
                 vocab: { $arrayElemAt: [{ $split: ["$template", "/"] }, 1] },
                 deck: "$d.name",
                 front: 1,
@@ -52,6 +53,7 @@ export class SearchResource {
                 preserveNullAndEmptyArrays: true
             }},
             {$project: {
+                template: 1,
                 vocab: 1,
                 deck: 1,
                 front: 1,
