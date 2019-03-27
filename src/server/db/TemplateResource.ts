@@ -5,33 +5,40 @@ import mustache from "mustache";
 import Database, { IVocab, ISentence } from ".";
 import cheerio from "cheerio";
 import fetch from "node-fetch";
+import jieba from "nodejieba";
 
 export class TemplateResource {
     public static async get(templateName: string): Promise<ITemplate | null> {
         const m = new RegExp("^([^/]+)(?:/([^/]+))").exec(templateName);
+        let templateToken: any = null;
 
-        if (m) {
-            if (m[1] === "v" && XRegExp("\\p{Han}").test(m[2])) {
+        if (m && XRegExp("\\p{Han}").test(m[2])) {
+            if (m[1] === "v") {
                 const vocab: string = m[2];
-                const templateToken = await TemplateResource.fromVocab(vocab);
+                templateToken = await this.fromVocab(vocab);
+            } else if (m[1] === "s") {
+                const sentence: string = m[2];
+                templateToken = await this.fromSentence(sentence);
+            }
+        }
 
-                for (const tNameRegex of Object.keys(templateMap)) {
-                    const mTemplate = new RegExp(tNameRegex).exec(templateName);
+        if (templateToken) {
+            for (const tNameRegex of Object.keys(templateMap)) {
+                const mTemplate = new RegExp(tNameRegex).exec(templateName);
 
-                    if (mTemplate) {
-                        const template = templateMap[tNameRegex];
-                        const output = {} as any;
-
-                        Object.keys(template).forEach((k) => {
-                            output[k] = mustache.render((template as any)[k], {
-                                v: templateToken.v[parseInt(mTemplate[1] || "0")],
-                                s: templateToken.s,
-                                m: mTemplate
-                            });
-                        });
-
-                        return output as ITemplate;
+                if (mTemplate) {
+                    if (mTemplate[2]) {
+                        templateToken.v = templateToken.v[parseInt(mTemplate[2])];
                     }
+
+                    const template = templateMap[tNameRegex];
+                    const output = {} as any;
+
+                    Object.keys(template).forEach((k) => {
+                        output[k] = mustache.render((template as any)[k], templateToken);
+                    });
+
+                    return output as ITemplate;
                 }
             }
         }
@@ -39,7 +46,7 @@ export class TemplateResource {
         return null;
     }
 
-    public static async fromVocab(vocab: string) {
+    private static async fromVocab(vocab: string, withSentence: boolean = true) {
         const db = new Database();
 
         let v: IVocab[] = await db.vocab.aggregate([
@@ -79,6 +86,10 @@ export class TemplateResource {
             v = newV.length > 0 ? newV : v;
         }
 
+        if (!withSentence) {
+            return v;
+        }
+
         let s: ISentence[] = await db.sentence.find({chinese: {$regex: XRegExp.escape(vocab)}}).limit(10).toArray();
 
         if (s.length === 0) {
@@ -95,6 +106,15 @@ export class TemplateResource {
 
         return {v, s};
     }
+
+    private static async fromSentence(sentence: string) {
+        const pinyin = pinyinConverter(sentence);
+        let vs: string[] = jieba.cutForSearch(sentence).filter((v: string) => XRegExp("\\p{Han}").test(v));
+        vs = vs.filter((v, i) => vs.indexOf(v) === i);
+        const vocab = (await Promise.all(vs.map((v) => this.fromVocab(v, false)))).map((v: any) => v[0]);
+
+        return {sentence, pinyin, vocab};
+    }
 }
 
 export interface ITemplate {
@@ -109,7 +129,7 @@ export interface ITemplateMap {
 
 export const templateMap = {
     "^v/[^/]+(?:/(\\d+))?$": {
-        front: "### {{{v.english}}}",
+        front: "{{#v.english}}### {{{v.english}}}{{/v.english}}",
         back: `
 ## {{{v.simplified}}}
 
@@ -121,6 +141,15 @@ export const templateMap = {
 - {{{chinese}}}
     - {{{english}}}
 {{/s}}`.trim()
+    },
+    "^s/[^/]+$": {
+        front: "### {{{sentence}}}",
+        back: `
+{{{pinyin}}}
+
+{{#vocab}}
+- [{{{simplified}}}](https://www.mdbg.net/chinese/dictionary?page=worddict&wdrst=0&wdqb={{{simplified}}}){{#traditional}} {{{traditional}}}{{/traditional}} [{{{pinyin}}}]{{#english}} {{{english}}}{{/english}}
+{{/vocab}}`.trim()
     }
 } as ITemplateMap;
 

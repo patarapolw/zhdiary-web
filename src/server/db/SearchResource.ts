@@ -8,7 +8,7 @@ export class SearchResource {
 
     constructor(anyOf?: string[]) {
         this.parser = new MongoSearchParser({
-            anyOf: anyOf ? anyOf : ["deck", "front", "back", "note", "tag", "vocab"],
+            anyOf: anyOf ? anyOf : ["deck", "front", "back", "note", "tag", "vocab", "template"],
             isDate: ["nextReview"]
         });
         this.db = new Database();

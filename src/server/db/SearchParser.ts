@@ -1,6 +1,7 @@
 import P from "parsimmon";
 import XRegExp from "xregexp";
 import moment from "moment";
+import { ObjectID } from "bson";
 
 export interface IMongoSearchQueryRule {
     anyOf?: string[];
@@ -93,6 +94,10 @@ export class MongoSearchParser {
                 let [k, op, v] = el;
 
                 const result = {} as any;
+
+                if (k === "id") {
+                    return {_id: new ObjectID(v)};
+                }
 
                 if (v === "NULL") {
                     return {$or: [

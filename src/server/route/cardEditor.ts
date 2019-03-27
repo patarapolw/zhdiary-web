@@ -18,8 +18,6 @@ class CardEditorController {
         const offset: number = req.body.offset;
         const limit: number = req.body.limit;
 
-        const q = search.getQuery(res.locals.userId, cond);
-
         const [data, ids] = await Promise.all([
             search.getQuery(res.locals.userId, cond).sort({deck: 1, srsLevel: 1}).skip(offset).limit(limit).toArray(),
             search.getQuery(res.locals.userId, cond).project({id: 1}).toArray()
@@ -37,8 +35,8 @@ class CardEditorController {
 
         const deckId = (await db.deck.findOneAndUpdate(
             {name: deck},
-            {$setOnInsert: {
-                userId: new ObjectID(res.locals.userId),
+            {$set: {
+                userId: res.locals.userId,
                 name: deck
             }},
             {
@@ -47,7 +45,11 @@ class CardEditorController {
             })).value!._id!;
 
         return res.json({
-            id: (await db.card.insertOne({deckId, ...c})).insertedId.toHexString()
+            id: (await db.card.insertOne({
+                userId: res.locals.userId,
+                deckId,
+                ...c
+            })).insertedId.toHexString()
         });
     }
 
@@ -65,7 +67,7 @@ class CardEditorController {
             const deckId = (await db.deck.findOneAndUpdate(
                 {name: deck},
                 {$setOnInsert: {
-                    userId: new ObjectID(res.locals.userId),
+                    userId: res.locals.userId,
                     name: deck
                 }},
                 {
@@ -85,8 +87,8 @@ class CardEditorController {
                 case "deck":
                     fieldData = (await db.deck.findOneAndUpdate(
                         {name: fieldData},
-                        {$setOnInsert: {
-                            userId: new ObjectID(res.locals.userId),
+                        {$set: {
+                            userId: res.locals.userId,
                             name: fieldData
                         }},
                         {

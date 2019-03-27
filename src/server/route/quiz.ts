@@ -20,7 +20,11 @@ class QuizController {
             cond.deck = {$regex: `${XRegExp.escape(req.body.deck)}(/.+)?`};
         }
 
-        cond.nextReview = {$lt: new Date()};
+        cond.$or = [
+            {nextReview: {$exists: false}},
+            {nextReview: {$in: [null, ""]}},
+            {nextReview: {$lt: new Date()}}
+        ];
 
         const cards = await search.getQuery(res.locals.userId, cond).project({id: {$toString: "$_id"}}).toArray();
 

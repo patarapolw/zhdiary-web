@@ -1,0 +1,18 @@
+# 中文 Diary
+
+A website for memorizing Chinese vocab and sentences with pure flashcards and no fluff.
+
+Fully powered by Spaced-Repetition System; is online and workable on mobile.
+
+## Usage
+
+- By default, there will be no template, but to activate the template, type `v/生词`, or `v/` anything, depending on the the vocab, and the template will appear.
+- Use `s/` for vocabularies.
+
+## Screenshots
+
+![](/public/img/quiz.png)
+
+![](/public/img/quiz-sentence.png)
+
+![](/public/img/editor.png)
