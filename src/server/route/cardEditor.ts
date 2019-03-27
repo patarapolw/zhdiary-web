@@ -20,7 +20,7 @@ class CardEditorController {
 
         const [data, ids] = await Promise.all([
             search.getQuery(res.locals.userId, cond).sort({deck: 1, srsLevel: 1}).skip(offset).limit(limit).toArray(),
-            search.getQuery(res.locals.userId, cond).project({id: 1}).toArray()
+            search.getQuery(res.locals.userId, cond).project({_id: 1}).toArray()
         ]);
 
         return res.json({

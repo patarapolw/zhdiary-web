@@ -290,9 +290,6 @@ class EntryEditor {
     private $el: IJqList = {};
     private quill: IQuillList = {};
     private modal: IModalList = {};
-    private current = {
-        vocab: ""
-    };
 
     constructor(settings: IDbEditorSettings) {
         this.settings = settings;
@@ -392,7 +389,7 @@ class EntryEditor {
                 if (col.type === "html") {
                     const qRoot = this.quill[col.name].root;
                     const val = qRoot.innerText.trim() ? qRoot.innerHTML : "";
-                    $("textarea", this.$el[col.name]).val(val);
+                    $("input, textarea", this.$el[col.name]).val(val);
                 }
             }
 
@@ -466,7 +463,6 @@ class EntryEditor {
     private updateEntry(entry: any, $container: JQuery) {
         $(".c-data-front", $container).html(entry.front);
         $(".c-data-back", $container).html(entry.back || "");
-        console.log($container.data("id"));
         fetchJSON(this.settings.endpoint, {
             id: $container.data("id"),
             update: entry

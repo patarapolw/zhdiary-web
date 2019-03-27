@@ -363,11 +363,16 @@ export class DbEditor {
         });
 
         if (!settings.readOnly) {
-            this.$el.tbody.on("click", "td", (e) => {
+            this.$el.tbody
+            .on("click", "td", (e) => {
                 const $target = $(e.target).closest("td");
+                const col: IColumn = $target.data("col");
+                if (!col) {
+                    return;
+                }
+
                 const fieldName: string = $target.data("name");
                 const fieldData = $target.data("data");
-                const col: IColumn = $target.data("col");
 
                 if (col.type === "datetime") {
                     $target.find("input").get(0)._flatpickr.open();
@@ -417,6 +422,13 @@ export class DbEditor {
                 $input.data("$target", $target);
 
                 setTimeout(() => $input.addClass("db-editor-cell-editor-can-remove"), 10);
+            })
+            .on("click", ".db-editor-row-delete", (e) => {
+                if (confirm("Are you sure you want to delete this entry?")) {
+                    const $tr = $(e.target).parent("tr");
+                    fetchJSON(settings.endpoint, {id: $tr.data("id")}, "DELETE");
+                    $tr.remove();
+                }
             });
 
             $(document.body).on("click", () => {
@@ -458,11 +470,15 @@ export class DbEditor {
         $("table", settings.el).width(settings.columns.map((col) => col.width).reduce((acc, x) => acc + x));
 
         const $thtr = $("thead tr", settings.el);
+        let $th: JQuery;
         for (const col of settings.columns) {
-            const $th = $(`<th scope="col">${col.name}</th>`);
+            $th = $(`<th scope="col">${col.name}</th>`);
             $thtr.append($th);
             $th.width(col.width);
         }
+
+        $th = $(`<th scope="col"></th>`);
+        $thtr.append($th);
 
         this.fetchData();
     }
@@ -522,11 +538,14 @@ export class DbEditor {
             $tr.append($seg);
         }
 
+        $tr.append(`
+        <td style="vertical-align: middle;" class="db-editor-row-delete pointer">
+            ✘
+        </td>`);
         $tr.data("id", id);
 
         if (isNew) {
-            $tr.addClass("new");
-            this.$el.tbody.prepend($tr);
+            $("tbody", this.settings.el).prepend($tr);
         } else {
             this.$el.tbody.append($tr);
         }

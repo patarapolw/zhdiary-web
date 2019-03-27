@@ -35,6 +35,7 @@ export class SearchResource {
                 template: 1,
                 vocab: { $arrayElemAt: [{ $split: ["$template", "/"] }, 1] },
                 deck: "$d.name",
+                id: {$toString: "$_id"},
                 front: 1,
                 back: 1,
                 note: 1,
@@ -53,6 +54,7 @@ export class SearchResource {
                 preserveNullAndEmptyArrays: true
             }},
             {$project: {
+                id: 1,
                 template: 1,
                 vocab: 1,
                 deck: 1,
