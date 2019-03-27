@@ -17,8 +17,13 @@ export function md2html(s?: string): string | undefined {
         return;
     }
 
-    s = XRegExp.replace(s, XRegExp("([\\p{Han}，、“”0-9]*\\p{Han}[\\p{Han}，、“”0-9]*)", "g"),
-    `<span class="zh-speak">$1</span>`);
+    s = XRegExp.replace(s, XRegExp("=?\\p{Han}+(?:[，、“”0-9]*\\p{Han}+)*", "g"), (m: any) => {
+        if (m[0] !== "=") {
+            return m.replace(m, `<span class="zh-speak">${m}</span>`);
+        }
+
+        return m;
+    });
 
     return md.makeHtml(s);
 }

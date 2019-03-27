@@ -9,11 +9,11 @@ import { md2html } from "../server/util";
 
     const bulk = db.card.initializeUnorderedBulkOp();
     cards.forEach((c) => {
-        bulk.find({_id: c._id}).updateOne({
+        bulk.find({_id: c._id}).updateOne({$set: {
             front: md2html(c.front),
             back: md2html(c.back),
             note: md2html(c.note)
-        });
+        }});
     });
     await bulk.execute();
 
