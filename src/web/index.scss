@@ -1,0 +1,109 @@
+@import "~bootstrap/scss/bootstrap.scss";
+@import "~bootstrap-vue/src/index.scss";
+@import "~flatpickr/dist/flatpickr.min";
+@import "~quill/dist/quill.snow";
+
+html, body, #App {
+    height: 100%;
+}
+
+.h-0 {
+    height: 0px !important;
+    margin: 0;
+    padding: 0;
+    outline: 0;
+}
+
+.page-control {
+    white-space: nowrap;
+}
+
+img {
+    max-width: 800px;
+    max-height: 600px;
+}
+
+table img {
+    max-width: 400px;
+}
+
+textarea {
+    font-family: 'Courier New', Courier, monospace;
+    resize: none;
+}
+
+pre {
+    white-space: pre-wrap;
+}
+
+.tree-new {
+    color: green;
+}
+
+.tree-leech {
+    color: red;
+}
+
+.tree-due {
+    color: blue;
+}
+
+.animate {
+    transition: all 0.4s linear;
+}
+
+.tree-score-child {
+    width: 2em;
+    text-align: right;
+    display: inline-block;
+}
+
+.navbar-nav > li {
+    display: inline-block;
+}
+
+.clear, .clear * {
+    background-color: rgba($color: #fff, $alpha: 0);
+    border: 0px;
+}
+
+.cell-wrapper {
+    max-height: 200px;
+    overflow: scroll;
+}
+
+.cell-editor-md {
+    height: 500px !important;
+}
+
+.modal-content * {
+    pointer-events: auto;
+}
+
+table {
+    table-layout: fixed;
+}
+
+* {
+    word-break: break-word;
+}
+
+.flatpickr-input {
+    background: #fff !important;
+}
+
+.crop {
+    overflow: hidden;
+}
+
+.h-0 {
+    height: 0px !important;
+    margin:0;
+    padding:0;
+    outline:0;
+}
+
+.nav-fixed-content {
+    height: calc(100% - 60px);
+    overflow: scroll;
+}

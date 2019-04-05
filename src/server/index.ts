@@ -67,16 +67,18 @@ app.use(userInViews());
 app.use(authRouter);
 app.use(bodyParser.json());
 app.use("/api", apiRouter);
-app.use("/editor/card", cardEditorRouter);
+app.use("/card/editor", cardEditorRouter);
 app.use("/deck", deckRouter);
 app.use("/quiz", quizRouter);
 app.use("/template", templateRouter);
 
 app.get("/", (req, res) => {
-    res.render("index", {
-        displayName: req.user ? req.user.displayName : null
+    res.render("layout/min", {
+        js: "/index.min.js"
     });
 });
+
+app.post("/loginStatus", (req, res) => res.json(req.user));
 
 (async () => {
     await mongoClient.connect();

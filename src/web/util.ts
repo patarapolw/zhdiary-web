@@ -1,3 +1,5 @@
+import showdown from "showdown";
+
 export function shuffle(a: any[]) {
     for (let i = a.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
@@ -30,4 +32,12 @@ export async function fetchJSON(url: string, data: any = {}, method?: string): P
             throw new Error(res.statusText);
         }
     }
+}
+
+const md = new showdown.Converter({
+    tables: true
+});
+
+export function md2html(s?: string) {
+    return md.makeHtml(s || "");
 }

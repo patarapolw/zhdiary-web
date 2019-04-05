@@ -12,7 +12,8 @@
         "lib": ["es2015", "dom"],
         "allowSyntheticDefaultImports": true,
         "typeRoots": ["./node_modules/@types", "./src/@types"],
-        "resolveJsonModule": true
+        "resolveJsonModule": true,
+        "experimentalDecorators": true
     },
     "include": [
         "./src/**/*"

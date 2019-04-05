@@ -1,74 +1,146 @@
-import "./common";
-import $ from "jquery";
-import initDeckViewer from "./deckViewer";
-import initCardEditor, { destroyCardEditor } from "./cardEditor";
+import Vue from "vue";
+import VueRouter from "vue-router";
+import Counter from "./DbEditor/component/Counter";
+import SearchBar from "./DbEditor/component/SearchBar";
+import "./index.scss";
+import Quiz from "./Quiz/Quiz";
+import BootstrapVue from "bootstrap-vue";
+import "bootstrap";
+import CardEditor from "./DbEditor/CardEditor";
 import { fetchJSON } from "./util";
-import "./common.css";
+import Front from "./Front";
 
-$(() => {
-    $("#link-deckViewer").on("click", () => {
-        destroyCardEditor();
-        initDeckViewer();
-    });
+Vue.use(VueRouter);
+Vue.use(BootstrapVue);
 
-    $("#link-cardEditor").on("click", () => {
-        initCardEditor();
-    });
+const router = new VueRouter({
+    routes: [
+        {name: "default", path: "/", component: Front},
+        {name: "quiz", path: "/quiz", component: Quiz},
+        {name: "cardEditor", path: "/edit", component: CardEditor}
+    ]
 });
 
-const el = {
-    searchBarArea: document.getElementById("SearchBarArea") as HTMLDivElement,
-    userNameArea: document.getElementById("UserNameArea") as HTMLDivElement,
-    loginButton: document.getElementById("LoginButton") as HTMLButtonElement,
-    editLink: document.getElementById("link-cardEditor") as HTMLButtonElement,
-    quizLink: document.getElementById("link-deckViewer") as HTMLButtonElement,
-    app: document.getElementById("App") as HTMLDivElement
-};
-
-const displayName: string | undefined = (window as any).displayName;
-
-if (displayName) {
-    allowLogout();
-} else {
-    allowLogin();
-}
-
-el.quizLink.onclick = () => initDeckViewer();
-el.editLink.onclick = () => initCardEditor();
-
-function allowLogin() {
-    el.userNameArea.innerText = displayName || "";
-    el.loginButton.classList.add("btn-outline-success");
-    el.loginButton.onclick = () => location.replace("/login");
-    el.loginButton.innerText = "Login for more";
-
-    el.editLink.disabled = true;
-    el.quizLink.disabled = true;
-
-    el.app.innerHTML = `
-    <div class="row mt-3 content">
-        <div class="col-12">
-            Login to create your interactive quiz.
-            <img class="mt-3" src="/img/quiz.png" />
-            <img class="mt-3" src="/img/editor.png" />
-            <br/><br/>
-        </div>
-    </div>`;
-}
-
-function allowLogout() {
-    el.loginButton.classList.add("btn-outline-danger");
-    el.loginButton.onclick = () => location.replace("/logout");
-    el.loginButton.innerText = "Logout";
-
-    el.editLink.disabled = false;
-    el.quizLink.disabled = false;
-
-    fetchJSON("/deck/filter").then((r: string[]) => {
-        if (r.length > 0) {
-            initDeckViewer();
-        } else {
-            initCardEditor();
+const app = new Vue({
+    data: {
+        displayName: null as any
+    },
+    router,
+    render(m) {
+        return m("div", {
+            class: ["h-100"]
+        }, [
+            m("nav", {
+                class: ["navbar", "navbar-expand-lg", "navbar-light", "bg-light"]
+            }, [
+                m("a", {
+                    class: ["navbar-brand"],
+                    domProps: {href: "#"}
+                }, "Rep2Recall"),
+                m("button", {
+                    class: ["navbar-toggler"],
+                    attrs: {"data-target": "#navbarSupportedContent", "data-toggle": "collapse", "aria-expanded": false},
+                    domProps: {type: "button"}
+                }, [
+                    m("span", {
+                        class: ["navbar-toggler-icon"]
+                    })
+                ]),
+                m("div", {
+                    class: ["collapse", "navbar-collapse"],
+                    attrs: {id: "navbarSupportedContent"}
+                }, [
+                    m("ul", {
+                        class: ["navbar-nav", "mr-auto"]
+                    }, [
+                        m("li", {
+                            class: {
+                                "active": this.$route.path === "/quiz",
+                                "nav-item": true
+                            }
+                        }, [
+                            m("router-link", {
+                                class: {
+                                    "nav-link": true,
+                                    "disabled": !this.displayName
+                                },
+                                props: {
+                                    to: "/quiz",
+                                    disabled: !this.displayName
+                                }
+                            }, "Quiz")
+                        ]),
+                        m("li", {
+                            class: {
+                                "active": this.$route.path === "/edit",
+                                "nav-item": true
+                            }
+                        }, [
+                            m("router-link", {
+                                class: {
+                                    "nav-link": true,
+                                    "disabled": !this.displayName
+                                },
+                                props: {
+                                    to: "/edit",
+                                    disabled: !this.displayName
+                                }
+                            }, "Edit")
+                        ]),
+                        m("li", {
+                            class: ["nav-item"]
+                        }, [
+                            m("a", {
+                                class: ["nav-link"],
+                                domProps: {href: "https://github.com/patarapolw/zhdiary-web", target: "_blank"}
+                            }, "About")
+                        ]),
+                        m(Counter)
+                    ]),
+                    m("ul", {
+                        class: ["navbar-nav"]
+                    }, [
+                        m(SearchBar, {
+                            class: ["nav-item", "mt-1"]
+                        }),
+                        m("button", {
+                            class: {
+                                "btn": true,
+                                "form-control": true,
+                                "nav-item": true,
+                                "mt-1": true,
+                                "mr-2": true,
+                                "btn-outline-danger": !!this.displayName,
+                                "btn-outline-success": !this.displayName
+                            },
+                            on: {click: () => location.replace(this.displayName ? "/logout" : "/login")}
+                        }, this.displayName ? "Logout" : "Login")
+                    ])
+                ])
+            ]),
+            m("router-view")
+        ]);
+    },
+    methods: {
+        async getLoginStatus() {
+            const r = (await fetchJSON("/loginStatus"));
+            if (typeof r === "object") {
+                this.displayName = r.displayName;
+                if (this.$route.path === "/") {
+                    router.push("/quiz");
+                }
+            } else {
+                this.displayName = null;
+                router.push("/");
+            }
         }
-    });
-}
+    },
+    created() {
+        // @ts-ignore
+        this.getLoginStatus();
+    },
+    beforeUpdate() {
+        // @ts-ignore
+        this.getLoginStatus();
+    }
+}).$mount("#App");
