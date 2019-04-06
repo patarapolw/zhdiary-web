@@ -2,7 +2,7 @@
   "name": "zhdiary-web",
   "version": "1.0.0",
   "description": "Customizable chinese flashcards on the web",
-  "main": "dist/server/index.js",
+  "main": "build/index.js",
   "author": "Pacharapol Withayasakpunt",
   "license": "MIT",
   "dependencies": {
@@ -81,15 +81,16 @@
   "devDependencies": {
     "concurrently": "^4.1.0",
     "nodemon": "^1.18.10",
-    "open-browser-webpack-plugin": "^0.0.5"
+    "open": "^6.0.0",
+    "wait-on": "^3.2.0"
   },
   "scripts": {
     "start": "yarn run serve",
     "dev": "concurrently 'yarn run ts:watch' 'yarn run front:watch'",
-    "serve": "node -r esm dist/server/index.js",
-    "ts:watch": "concurrently 'tsc -w' 'nodemon -r esm -w dist/server'",
+    "serve": "node -r esm .",
+    "ts:watch": "concurrently 'yarn run tsc' 'wait-on build/index.js && nodemon -r esm -w build'",
     "front:watch": "webpack --watch --config webpack.dev.js",
-    "build": "tsc && webpack --config webpack.prod.js",
-    "tsc": "tsc"
+    "build": "yarn run tsc && webpack --config webpack.prod.js",
+    "tsc": "tsc -p src/server"
   }
 }
