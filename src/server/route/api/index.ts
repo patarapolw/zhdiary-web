@@ -9,6 +9,11 @@ import { Strategy } from "passport-local";
 import { ObjectID } from "bson";
 import zhRouter from "./zh";
 import userRouter from "./user";
+import connectMongo from "connect-mongodb-session";
+import dotenv from "dotenv";
+dotenv.config();
+
+const MongoStore = connectMongo(session);
 
 passport.use(new Strategy({
     usernameField: "email",
@@ -31,7 +36,11 @@ router.use(session({
     secret: "romp-porous-likewise-negligent-conical-paralyze-civil-siesta-precook-reword-unwieldy-natural-cuddly-reggae",
     cookie: { maxAge: 60000 },
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    store: new MongoStore({
+        uri: process.env.MONGO_URI!,
+        collection: "session"
+    })
 }));
 
 router.use("/zh", auth.required, zhRouter);
