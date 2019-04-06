@@ -8,8 +8,10 @@ export default class EETag extends Vue {
     @Prop() private col!: IColumn;
     @Prop() private value!: string[];
 
+    private _value: string[] = [];
+
     public render(m: CreateElement) {
-        this.value = this.value || [];
+        this._value = this.value || [];
 
         return m("div", {
             class: ["form-group", "row"]
@@ -23,7 +25,7 @@ export default class EETag extends Vue {
                 m("input", {
                     class: ["form-control"],
                     domProps: {
-                        value: this.value.join(this.col.separator || " "),
+                        value: this._value.join(this.col.separator || " "),
                         name: this.col.name,
                         required: this.col.required,
                         placeholder: "Please type in tags separated by spaces"
@@ -37,8 +39,8 @@ export default class EETag extends Vue {
                 }, [
                     m("button", {
                         class: ["input-group-text", "btn", "btn-outline-success"],
-                        domProps: {disabled: this.value.indexOf("marked") !== -1},
-                        on: {click: () => this.value.push("marked")}
+                        domProps: {disabled: this._value.indexOf("marked") !== -1},
+                        on: {click: () => this._value.push("marked")}
                     }, "marked")
                 ])
             ]),

@@ -21,7 +21,7 @@ export default class CardEditorTr extends Vue {
             if (col.type === "datetime") {
                 inner = m(DatetimeNullable, {
                     props: {value: this.data[col.name] || ""},
-                    style: {width: "200px"},
+                    style: {width: "220px"},
                     on: {input: (_v: string | null) => {
                         fetchJSON(this.editorApi, {id: this.data.id, fieldName: "nextReview", fieldData: _v}, "PUT")
                         .then(() => {

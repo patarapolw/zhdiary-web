@@ -7,7 +7,7 @@ import globalState from "../../shared";
 import EEOneLine from "./EEOneLine";
 import EETag from "./EETag";
 import EEDatetime from "./EEDatetime";
-import VueQuill from "./VueQuill";
+import VueQuill from "./HtmlEditor";
 
 @Component
 export default class EntryEditor extends Vue {
@@ -19,11 +19,13 @@ export default class EntryEditor extends Vue {
     private entry: any = {};
     private wasValidated = false;
 
+    private oldEntry: any = {};
+
     constructor(props: any) {
         super(props);
         $(document.body).on("mouseover", ".modal", () => {
             const $modal = $(".modal");
-            if ($("textarea:hover, .scroll:hover", $modal).length > 0) {
+            if ($("textarea:hover, .ql-editor:hover", $modal).length > 0) {
                 $modal.css("pointer-events", "none");
             } else {
                 $modal.css("pointer-events", "auto");
@@ -45,6 +47,7 @@ export default class EntryEditor extends Vue {
                 case "list":
                     if (col.name === "template") {
                         formContent.push(m(EEOneLine, {
+                            ref: "template",
                             props: {col, value: this.entry[col.name] || ""},
                             on: {input: (_v: string) => {
                                 Vue.set(this.entry, col.name, _v);
@@ -56,6 +59,7 @@ export default class EntryEditor extends Vue {
                                                     this.entry = Object.assign(this.entry, {
                                                         [col2.name]: t[col2.name]
                                                     });
+                                                    (this.$refs[`quill-${col2.name}`] as any).setValue(t[col2.name]);
                                                 }
                                             }
                                         }
@@ -91,7 +95,8 @@ export default class EntryEditor extends Vue {
                             props: {
                                 value: this.entry[col.name] || "",
                                 required: col.required
-                            }
+                            },
+                            on: {input: (_v: string) => Vue.set(this.entry, col.name, _v)}
                         }),
                         col.required
                         ? m("div", {
@@ -157,9 +162,12 @@ export default class EntryEditor extends Vue {
     }
 
     public updated() {
-        for (const col of this.cols) {
-            if (col.type === "html") {
-                (this.$refs[`quill-${col.name}`] as any).setValue(this.entry[col.name]);
+        if (this.entry !== this.oldEntry) {
+            this.oldEntry = this.entry;
+            for (const col of this.cols) {
+                if (col.type === "html") {
+                    (this.$refs[`quill-${col.name}`] as any).setValue(this.entry[col.name]);
+                }
             }
         }
     }

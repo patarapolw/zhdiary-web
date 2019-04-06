@@ -134,7 +134,7 @@ export default class QuizArea extends Vue {
     }
 
     private async onEntryUpdated(entry: any) {
-        await fetchJSON(globalState.cardEditorApi, {id: this.currentId, updated: entry}, "PUT");
+        await fetchJSON(globalState.cardEditorApi, {id: this.currentId, update: entry}, "PUT");
         const $parent = $(`.c-${this.currentId}`);
 
         $(".c-data-front", $parent).html(md2html(entry.front));

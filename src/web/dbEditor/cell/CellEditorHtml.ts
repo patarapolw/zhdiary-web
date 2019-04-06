@@ -1,14 +1,14 @@
 import { Vue, Component, Prop, Emit } from "vue-property-decorator";
 import { CreateElement } from "vue";
 import dbEditorState from "../shared";
-import VueQuill from "../entry/VueQuill";
+import VueQuill from "../entry/HtmlEditor";
 
 @Component
 export default class CellEditorHtml extends Vue {
     private id?: number;
     private colName?: string;
-    private value: string = "";
 
+    private quill: any;
     private config = dbEditorState.editor.html;
 
     constructor(props: any) {
@@ -23,8 +23,8 @@ export default class CellEditorHtml extends Vue {
             attrs: {"hide-footer": true, "hide-header": true}
         }, [
             m(VueQuill, {
-                class: ["mb-3", "cell-editor-md", "mr-2", "ml-2"],
-                on: {input: (v: string) => this.value = v}
+                ref: "vueQuill",
+                class: ["mb-3", "cell-editor-html", "mx-auto"]
             }),
             m("b-button", {
                 on: {click: () => this.onSave()}
@@ -32,17 +32,21 @@ export default class CellEditorHtml extends Vue {
         ]);
     }
 
+    public mounted() {
+        this.quill = (this.$refs.vueQuill as any);
+    }
+
     @Emit("save")
     public onSave() {
         (this.$refs.cellEditorHtml as any).hide();
 
-        return {id: this.id, colName: this.colName, value: this.value};
+        return {id: this.id, colName: this.colName, value: this.quill.getValue()};
     }
 
     private show(id: number, colName: string, value: string) {
         this.id = id;
         this.colName = colName;
-        this.value = value;
+        this.quill.setValue(value);
 
         (this.$refs.cellEditorHtml as any).show();
     }

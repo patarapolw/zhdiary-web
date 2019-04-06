@@ -17,9 +17,11 @@ class CardEditorController {
 
         const offset: number = req.body.offset;
         const limit: number = req.body.limit;
+        const sortBy: string = req.body.sortBy || "deck";
+        const desc: boolean = req.body.desc;
 
         const [data, ids] = await Promise.all([
-            search.getQuery(res.locals.userId, cond).sort({deck: 1, srsLevel: 1}).skip(offset).limit(limit).toArray(),
+            search.getQuery(res.locals.userId, cond).sort({[sortBy]: desc ? -1 : 1}).skip(offset).limit(limit).toArray(),
             search.getQuery(res.locals.userId, cond).project({_id: 1}).toArray()
         ]);
 

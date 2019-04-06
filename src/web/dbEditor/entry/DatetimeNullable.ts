@@ -7,8 +7,8 @@ import moment from "moment";
 @Component
 export default class DatetimeNullable extends Vue {
     @Prop() private value!: string | null;
-    @Prop() private dateFormat = "M d, Y H:i";
 
+    private dateFormat = "M d, Y H:i";
     private inputRef = uuid();
     private _flatpickr?: flatpickr.Instance;
 
@@ -19,7 +19,7 @@ export default class DatetimeNullable extends Vue {
             m("input", {
                 ref: this.inputRef,
                 class: ["form-control"],
-                domProps: {value: this.value ? flatpickr.formatDate(moment(this.value).toDate(), this.dateFormat) : undefined}
+                domProps: {value: this.value ? flatpickr.formatDate(moment(this.value).toDate(), this.dateFormat) : ""}
             }),
             m("div", {
                 class: ["input-group-append"]
@@ -52,6 +52,9 @@ export default class DatetimeNullable extends Vue {
                 }
             }
         });
+        if ((this._flatpickr as any).length === 0) {
+            this._flatpickr = undefined;
+        }
     }
 
     public updated() {

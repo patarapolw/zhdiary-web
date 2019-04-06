@@ -36,7 +36,7 @@ const app = new Vue({
                 m("a", {
                     class: ["navbar-brand"],
                     domProps: {href: "#"}
-                }, "Rep2Recall"),
+                }, "中文 Diary"),
                 m("button", {
                     class: ["navbar-toggler"],
                     attrs: {"data-target": "#navbarSupportedContent", "data-toggle": "collapse", "aria-expanded": false},

@@ -13,7 +13,7 @@ export const globalState = {
         {name: "tag", width: 150, type: "list", separator: " "},
         {name: "note", width: 300, type: "html"},
         {name: "srsLevel", width: 150, type: "number", label: "SRS Level", newEntry: false},
-        {name: "nextReview", width: 200, type: "datetime", label: "Next Review", newEntry: false}
+        {name: "nextReview", width: 220, type: "datetime", label: "Next Review", newEntry: false}
     ] as IColumn[],
     entryEditor: {} as any
 };

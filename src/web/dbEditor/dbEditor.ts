@@ -93,7 +93,8 @@ export default class DbEditor extends Vue {
     }
 
     public mounted() {
-        resizableGrid($("table")[0]);
+        const $table = $("table");
+        resizableGrid($table[0]);
         this.fetchData();
     }
 
