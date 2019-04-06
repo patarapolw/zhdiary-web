@@ -5,6 +5,9 @@
   "main": "index.js",
   "author": "Pacharapol Withayasakpunt",
   "license": "MIT",
+  "engines": {
+    "node": "11.11.0"
+  },
   "dependencies": {
     "@types/cheerio": "^0.22.11",
     "@types/cors": "^2.8.4",
