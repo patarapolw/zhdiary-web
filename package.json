@@ -79,12 +79,12 @@
     "vue-router": "^3.0.2",
     "webpack": "^4.29.6",
     "webpack-cli": "^3.3.0",
-    "xregexp": "^4.2.4"
+    "xregexp": "^4.2.4",
+    "opn": "^5.5.0",
+    "@types/opn": "^5.1.0"
   },
   "devDependencies": {
-    "@types/opn": "^5.1.0",
     "concurrently": "^4.1.0",
-    "opn": "^5.5.0",
     "ts-node-dev": "^1.0.0-pre.32"
   },
   "scripts": {
