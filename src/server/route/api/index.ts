@@ -15,20 +15,6 @@ dotenv.config();
 
 const MongoStore = connectMongo(session);
 
-passport.use(new Strategy({
-    usernameField: "email",
-    passwordField: "secret"
-}, (email, secret, done) => {
-    const db = new Database();
-    db.user.findOne({email, secret}).then((user) => {
-        if (!user) {
-            return done(null, false, {message: "email or secret is invalid"});
-        }
-
-        return done(null, user);
-    }).catch(done);
-}));
-
 export const router = Router();
 router.use(cors());
 router.use(bodyParser.json({limit: "50mb"}));
@@ -41,6 +27,20 @@ router.use(session({
         uri: process.env.MONGO_URI!,
         collection: "session"
     })
+}));
+
+passport.use(new Strategy({
+    usernameField: "email",
+    passwordField: "secret"
+}, (email, secret, done) => {
+    const db = new Database();
+    db.user.findOne({email, secret}).then((user) => {
+        if (!user) {
+            return done(null, false, {message: "email or secret is invalid"});
+        }
+
+        return done(null, user);
+    }).catch(done);
 }));
 
 router.use("/zh", auth.required, zhRouter);
