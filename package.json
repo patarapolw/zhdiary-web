@@ -2,7 +2,7 @@
   "name": "zhdiary-web",
   "version": "1.0.0",
   "description": "Customizable chinese flashcards on the web",
-  "main": "index.js",
+  "main": "dist/server/index.js",
   "author": "Pacharapol Withayasakpunt",
   "license": "MIT",
   "dependencies": {
@@ -68,7 +68,6 @@
     "showdown": "^1.9.0",
     "style-loader": "^0.23.1",
     "ts-loader": "^5.3.3",
-    "ts-node": "^8.0.3",
     "typescript": "^3.3.4000",
     "uuid": "^3.3.2",
     "vue": "^2.6.10",
@@ -81,15 +80,16 @@
   },
   "devDependencies": {
     "concurrently": "^4.1.0",
-    "open-browser-webpack-plugin": "^0.0.5",
-    "ts-node-dev": "^1.0.0-pre.32"
+    "nodemon": "^1.18.10",
+    "open-browser-webpack-plugin": "^0.0.5"
   },
   "scripts": {
     "start": "yarn run serve",
-    "dev": "concurrently 'yarn run watch' 'yarn run front:watch'",
-    "serve": "ts-node -r esm src/server/index.ts",
-    "watch": "ts-node-dev -r esm src/server/index.ts",
+    "dev": "concurrently 'yarn run ts:watch' 'yarn run front:watch'",
+    "serve": "node -r esm dist/server/index.js",
+    "ts:watch": "concurrently 'tsc -w' 'nodemon -r esm -w dist/server'",
     "front:watch": "webpack --watch --config webpack.dev.js",
-    "build": "webpack --config webpack.prod.js"
+    "build": "tsc && webpack --config webpack.prod.js",
+    "tsc": "tsc"
   }
 }
