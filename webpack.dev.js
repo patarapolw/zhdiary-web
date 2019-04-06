@@ -2,6 +2,8 @@ const common = require("./webpack.common");
 const waitOn = require("wait-on");
 const open = require("open");
 
+let isFirstEmit = true;
+
 module.exports = {
     ...common,
     mode: "development",
@@ -10,9 +12,12 @@ module.exports = {
         {
             apply: (compiler) => {
                 compiler.hooks.afterEmit.tap("open-browser", () => {
-                    waitOn({resources: ["http://localhost:5000"]}).then(() => {
-                        open("http://localhost:5000")
-                    })
+                    if (isFirstEmit) {
+                        isFirstEmit = false;
+                        waitOn({resources: ["http://localhost:5000"]}).then(() => {
+                            open("http://localhost:5000")
+                        });
+                    }
                 })
             }
         }

@@ -13,6 +13,7 @@ export default class QuizArea extends Vue {
     };
 
     private currentId?: number;
+    private isQuizStarted = false;
 
     public render(m: CreateElement) {
         return m("div", {
@@ -44,7 +45,8 @@ export default class QuizArea extends Vue {
     }
 
     public updated() {
-        if (this.state.quiz.currentDeck) {
+        if (this.state.quiz.currentDeck && !this.isQuizStarted) {
+            this.isQuizStarted = true;
             this.initQuiz();
         }
     }
@@ -55,6 +57,7 @@ export default class QuizArea extends Vue {
 
         $quizArea.html("");
         const cardIds = await fetchJSON(globalState.quizApi, {deck: quizState.currentDeck, q: quizState.q});
+        this.isQuizStarted = false;
 
         $quizArea.html(h("div", `${cardIds.length} entries to go...`).outerHTML);
         if (cardIds.length > 0) {
