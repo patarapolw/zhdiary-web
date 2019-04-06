@@ -69,7 +69,6 @@
     "sass-loader": "^7.1.0",
     "showdown": "^1.9.0",
     "style-loader": "^0.23.1",
-    "tiptap": "^1.14.0",
     "ts-loader": "^5.3.3",
     "ts-node": "^8.0.3",
     "typescript": "^3.3.4000",
@@ -80,17 +79,15 @@
     "vue-router": "^3.0.2",
     "webpack": "^4.29.6",
     "webpack-cli": "^3.3.0",
-    "xregexp": "^4.2.4",
-    "opn": "^5.5.0",
-    "@types/opn": "^5.1.0"
+    "xregexp": "^4.2.4"
   },
   "devDependencies": {
     "concurrently": "^4.1.0",
     "ts-node-dev": "^1.0.0-pre.32"
   },
   "scripts": {
-    "start": "concurrently 'yarn run serve' 'ts-node -r esm src/open-browser.ts'",
-    "dev": "concurrently 'yarn run watch' 'yarn run front:watch' 'ts-node -r esm src/open-browser.ts'",
+    "start": "yarn run serve",
+    "dev": "concurrently 'yarn run watch' 'yarn run front:watch'",
     "serve": "ts-node -r esm src/server/index.ts",
     "watch": "ts-node-dev -r esm src/server/index.ts",
     "front:watch": "webpack --watch --config webpack.dev.js",
