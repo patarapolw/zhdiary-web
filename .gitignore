@@ -1,5 +1,5 @@
 .vscode/
-*.lock
+# *.lock
 .idea/
 logs
 *.log

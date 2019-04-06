@@ -5,6 +5,9 @@
   "main": "build/index.js",
   "author": "Pacharapol Withayasakpunt",
   "license": "MIT",
+  "engines": {
+    "yarn": "1.15.2"
+  },
   "dependencies": {
     "@types/cheerio": "^0.22.11",
     "@types/connect-mongodb-session": "^0.0.0",
