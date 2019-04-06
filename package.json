@@ -6,7 +6,8 @@
   "author": "Pacharapol Withayasakpunt",
   "license": "MIT",
   "engines": {
-    "node": "11.11.0"
+    "node": "11.11.0",
+    "npm": "6.9.0"
   },
   "dependencies": {
     "@types/cheerio": "^0.22.11",
