@@ -7,8 +7,10 @@ import Quiz from "./Quiz/Quiz";
 import BootstrapVue from "bootstrap-vue";
 import "bootstrap";
 import CardEditor from "./DbEditor/CardEditor";
-import { fetchJSON } from "./util";
+import ImportExport from "./ImportExport";
+import "./contextmenu";
 import Front from "./Front";
+import { fetchJSON } from "./util";
 
 Vue.use(VueRouter);
 Vue.use(BootstrapVue);
@@ -17,19 +19,16 @@ const router = new VueRouter({
     routes: [
         {name: "default", path: "/", component: Front},
         {name: "quiz", path: "/quiz", component: Quiz},
-        {name: "cardEditor", path: "/edit", component: CardEditor}
+        {name: "cardEditor", path: "/editor", component: CardEditor},
+        {name: "importExport", path: "/importExport", component: ImportExport}
     ]
 });
 
 const app = new Vue({
-    data: {
-        displayName: null as any
-    },
     router,
+    components: {Counter, SearchBar},
     render(m) {
-        return m("div", {
-            class: ["h-100"]
-        }, [
+        return m("div", {class: ["h-100"]}, [
             m("nav", {
                 class: ["navbar", "navbar-expand-lg", "navbar-light", "bg-light"]
             }, [
@@ -39,12 +38,13 @@ const app = new Vue({
                 }, "中文 Diary"),
                 m("button", {
                     class: ["navbar-toggler"],
-                    attrs: {"data-target": "#navbarSupportedContent", "data-toggle": "collapse", "aria-expanded": false},
-                    domProps: {type: "button"}
+                    attrs: {
+                        "data-target": "#navbarSupportedContent",
+                        "data-toggle": "collapse",
+                        "type": "button"
+                    }
                 }, [
-                    m("span", {
-                        class: ["navbar-toggler-icon"]
-                    })
+                    m("span", {class: "navbar-toggler-icon"})
                 ]),
                 m("div", {
                     class: ["collapse", "navbar-collapse"],
@@ -54,45 +54,45 @@ const app = new Vue({
                         class: ["navbar-nav", "mr-auto"]
                     }, [
                         m("li", {
-                            class: {
-                                "active": this.$route.path === "/quiz",
-                                "nav-item": true
-                            }
+                            attrs: {
+                                disabled: !this.displayName
+                            },
+                            class: ["nav-item", this.$route.path === "/quiz" ? "active" : ""]
                         }, [
                             m("router-link", {
-                                class: {
-                                    "nav-link": true,
-                                    "disabled": !this.displayName
-                                },
-                                props: {
-                                    to: "/quiz",
-                                    disabled: !this.displayName
-                                }
+                                class: ["nav-link"],
+                                props: {to: "/quiz", event: !this.displayName ? "" : "click"}
                             }, "Quiz")
                         ]),
                         m("li", {
-                            class: {
-                                "active": this.$route.path === "/edit",
-                                "nav-item": true
-                            }
+                            attrs: {
+                                disabled: !this.displayName
+                            },
+                            class: ["nav-item", this.$route.path === "/editor" ? "active" : ""]
                         }, [
                             m("router-link", {
-                                class: {
-                                    "nav-link": true,
-                                    "disabled": !this.displayName
-                                },
-                                props: {
-                                    to: "/edit",
-                                    disabled: !this.displayName
-                                }
-                            }, "Edit")
+                                class: ["nav-link"],
+                                props: {to: "/editor", event: !this.displayName ? "" : "click"}
+                            }, "Editor")
+                        ]),
+                        m("li", {
+                            attrs: {
+                                disabled: !this.displayName
+                            },
+                            class: ["nav-item", this.$route.path === "/importExport" ? "active" : ""]
+                        }, [
+                            m("router-link", {
+                                class: ["nav-link"],
+                                props: {to: "/importExport", event: !this.displayName ? "" : "click"}
+                            }, "Import")
                         ]),
                         m("li", {
                             class: ["nav-item"]
                         }, [
                             m("a", {
                                 class: ["nav-link"],
-                                domProps: {href: "https://github.com/patarapolw/zhdiary-web", target: "_blank"}
+                                domProps: {href: "https://github.com/patarapolw/rep2recall-web"},
+                                attrs: {target: "_blank"}
                             }, "About")
                         ]),
                         m(Counter)
@@ -100,19 +100,11 @@ const app = new Vue({
                     m("ul", {
                         class: ["navbar-nav"]
                     }, [
-                        m(SearchBar, {
-                            class: ["nav-item", "mt-1"]
-                        }),
+                        m(SearchBar),
                         m("button", {
-                            class: {
-                                "btn": true,
-                                "form-control": true,
-                                "nav-item": true,
-                                "mt-1": true,
-                                "mr-2": true,
-                                "btn-outline-danger": !!this.displayName,
-                                "btn-outline-success": !this.displayName
-                            },
+                            class: ["btn", "form-control", "nav-item", "mt-1", "mr-2",
+                            this.displayName ? "btn-outline-danger" : "btn-outline-success"],
+                            style: {display: typeof this.displayName === "string" ? "block" : "none"},
                             on: {click: () => location.replace(this.displayName ? "/logout" : "/login")}
                         }, this.displayName ? "Logout" : "Login")
                     ])
@@ -121,17 +113,27 @@ const app = new Vue({
             m("router-view")
         ]);
     },
+    data: {
+        displayName: null as any
+    },
     methods: {
         async getLoginStatus() {
             const r = (await fetchJSON("/loginStatus"));
-            if (typeof r === "object") {
+            if (typeof r === "object" || typeof r === "string") {
                 this.displayName = r.displayName;
                 if (this.$route.path === "/") {
                     router.push("/quiz");
                 }
             } else {
                 this.displayName = null;
-                router.push("/");
+                if (this.$route.path !== "/") {
+                    router.push("/");
+                }
+            }
+        },
+        handleRouteChange(route: any) {
+            if (this.displayName) {
+                this.$router.push(route);
             }
         }
     },

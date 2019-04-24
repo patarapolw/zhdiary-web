@@ -8,14 +8,18 @@ export default class Front extends Vue {
         return m("div", {
             class: ["mt-3", "container", "nav-fixed-content"]
         }, [
-            m("div", {class: ["row"]}, "Login to create your interactive quiz."),
+            m("div", {class: ["row", "ml-3", "mr-3"]}, "Login to create your interactive quiz."),
             m("img", {
                 class: ["mt-3", "row", "mx-auto"],
-                domProps: {src: "/img/quiz.png"}
+                domProps: {src: "/screenshots/editor.png"}
             }),
             m("img", {
                 class: ["mt-3", "row", "mx-auto"],
-                domProps: {src: "/img/editor.png"}
+                domProps: {src: "/screenshots/quiz-sentence.png"}
+            }),
+            m("img", {
+                class: ["mt-3", "row", "mx-auto"],
+                domProps: {src: "/screenshots/quiz.png"}
             })
         ]);
     }

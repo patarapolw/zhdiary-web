@@ -3,7 +3,7 @@ export interface IColumn {
     width: number;
     readOnly?: boolean;
     label?: string;
-    type?: "one-line" |  "multi-line" | "html" | "number" | "datetime" | "list";
+    type?: "one-line" |  "multi-line" | "markdown" | "number" | "datetime" | "list";
     newEntry?: boolean;
     editEntry?: boolean;
     separator?: string;

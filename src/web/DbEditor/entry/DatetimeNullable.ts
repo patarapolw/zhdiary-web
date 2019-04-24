@@ -19,7 +19,7 @@ export default class DatetimeNullable extends Vue {
             m("input", {
                 ref: this.inputRef,
                 class: ["form-control"],
-                domProps: {value: this.value ? flatpickr.formatDate(moment(this.value).toDate(), this.dateFormat) : ""}
+                domProps: {value: this.value ? flatpickr.formatDate(moment(this.value).toDate(), this.dateFormat) : undefined}
             }),
             m("div", {
                 class: ["input-group-append"]
@@ -52,8 +52,9 @@ export default class DatetimeNullable extends Vue {
                 }
             }
         });
-        if ((this._flatpickr as any).length === 0) {
-            this._flatpickr = undefined;
+
+        if (Array.isArray(this._flatpickr)) {
+            this._flatpickr = this._flatpickr[0];
         }
     }
 

@@ -1,4 +1,4 @@
-import { Vue, Component } from "vue-property-decorator";
+import { Vue, Component, Prop, Emit, Watch } from "vue-property-decorator";
 import { CreateElement } from "vue";
 import dbEditorState from "../shared";
 
@@ -46,7 +46,7 @@ export default class Counter extends Vue {
                         class: ["d-inline", "mr-1"],
                         style: {whiteSpace: "pre"}
                     },
-                    `${computedPage.from} - ${computedPage.to} of ${this.state.page.count}`),
+                    `${computedPage.from.toLocaleString()} - ${computedPage.to.toLocaleString()} of ${this.state.page.count.toLocaleString()}`),
                     m("button", {
                         class: ["btn", "d-inline", "mr-1"],
                         domProps: {disabled: isDisabled.next, type: "button"},

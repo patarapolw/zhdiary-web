@@ -19,8 +19,6 @@ export default class CellEditorText extends Vue {
     }
 
     public render(m: CreateElement) {
-        this.position = this.config.position;
-
         setTimeout(() => this.canRemove = true, 100);
 
         return m("div", {
@@ -43,10 +41,11 @@ export default class CellEditorText extends Vue {
         ]);
     }
 
-    private show(id: number, colName: string, value: string) {
+    private show(id: number, colName: string, value: string, position: any) {
         this.id = id;
         this.colName = colName;
         this.value = value;
+        this.position = position;
         this.canRemove = false;
     }
 

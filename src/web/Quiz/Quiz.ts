@@ -13,8 +13,10 @@ export default class Quiz extends Vue {
     public render(m: CreateElement) {
         return m("div", {
             class: {
-                "container-fluid": !!this.state.quiz.isQuizShown,
-                "container": !this.state.quiz.isQuizShown
+                "container-fluid": this.state.quiz.isQuizShown,
+                "container": !this.state.quiz.isQuizShown,
+                "row": true,
+                "col-12": true
             }
         }, [
             m(DeckArea),

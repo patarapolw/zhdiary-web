@@ -1,7 +1,7 @@
 import { Vue, Component, Prop, Watch } from "vue-property-decorator";
 import { CreateElement } from "vue";
 import EntryEditor from "./entry/EntryEditor";
-import CellEditorHtml from "./cell/CellEditorHtml";
+import CellEditorMd from "./cell/CellEditorMd";
 import CellEditorText from "./cell/CellEditorText";
 import CellEditorList from "./cell/CellEditorList";
 import DbEditorTr from "./DbEditorTr";
@@ -22,13 +22,16 @@ export default class DbEditor extends Vue {
     private offset = 0;
     private limit = 10;
     private q = "";
+    private entryEditorTitle = "Add new entry";
+    private isLoading = false;
 
     private counter = dbEditorState.counter;
     private searchBar = dbEditorState.searchBar;
+    private editor = {} as any;
 
     constructor(props: any) {
         super(props);
-        $(document.body).on("click", () => {
+        document.addEventListener("click", () => {
             if ($(".cell-editor-text.can-remove:not(:hover)").length > 0) {
                 (this.$refs.editorText as any).hide();
             }
@@ -47,15 +50,15 @@ export default class DbEditor extends Vue {
             m(EntryEditor, {
                 ref: "entryEditor",
                 props: {
-                    title: "Add new entry",
+                    title: this.entryEditorTitle,
                     cols: this.cols,
                     editorApi: this.editorApi
                 },
                 on: {save: this.addEntry}
             }),
             m(CellEditorText, {ref: "editorText", on: {hide: this.updateCell}}),
-            m(CellEditorList, {on: {save: this.updateCell}}),
-            m(CellEditorHtml, {on: {save: this.updateCell}}),
+            m(CellEditorList, {ref: "editorList", on: {save: this.updateCell}}),
+            m(CellEditorMd, {ref: "editorMd", on: {save: this.updateCell}}),
             m("table", {
                 class: ["table", "table-striped"]
             }, [
@@ -65,7 +68,11 @@ export default class DbEditor extends Vue {
                             return m("th", {
                                 attrs: {scope: "col"},
                                 style: {width: `${col.width}px`},
-                                on: {click: () => {
+                                on: {click: (e: any) => {
+                                    if (e.target.className.indexOf("resizer") !== -1) {
+                                        return;
+                                    }
+
                                     if (this.sortBy === col.name) {
                                         this.desc = !this.desc;
                                     } else {
@@ -83,18 +90,27 @@ export default class DbEditor extends Vue {
                         })
                     ])
                 ]),
-                m("tbody", this.data.map((d) => m(DbEditorTr, {
-                    ref: `row${d.id}`,
-                    props: {data: d, editorApi: this.editorApi},
-                    on: {remove: this.removeEntry}
-                })))
+                m("tbody", [
+                    m("img", {
+                        domProps: {src: "/asset/Spinner-1s-200px.svg"},
+                        style: {height: "5em", display: this.isLoading ? "block" : "none"}
+                    }),
+                    ...this.data.map((d) => m(DbEditorTr, {
+                        ref: `row${d.id}`,
+                        props: {data: d, editorApi: this.editorApi, cols: this.cols, editor: this.editor},
+                        on: {remove: this.removeEntry, edit: this.editEntry}
+                    }))
+                ])
             ])
         ]);
     }
 
     public mounted() {
-        const $table = $("table");
-        resizableGrid($table[0]);
+        Vue.set(this.editor, "text", this.$refs.editorText);
+        Vue.set(this.editor, "list", this.$refs.editorList);
+        Vue.set(this.editor, "md", this.$refs.editorMd);
+
+        resizableGrid($("table")[0]);
         this.fetchData();
     }
 
@@ -107,20 +123,20 @@ export default class DbEditor extends Vue {
     @Watch("counter.addEntry")
     public watchAddEntry(clicked: boolean) {
         if (clicked) {
+            this.entryEditorTitle = "Add new entry";
             (this.$refs.entryEditor as any).show();
         }
     }
 
-    @Watch("searchbar.q")
+    public editEntry(id: number) {
+        this.entryEditorTitle = "Edit entry";
+        (this.$refs.entryEditor as any).show(id);
+    }
+
+    @Watch("searchBar.q")
     public watchQ(q: string) {
         this.q = q;
         this.fetchData();
-    }
-
-    public beforeUpdate() {
-        if (this.data.length === 0) {
-            this.fetchData();
-        }
     }
 
     public updated() {
@@ -128,10 +144,15 @@ export default class DbEditor extends Vue {
     }
 
     private async fetchData() {
+        this.isLoading = true;
+
         const r = await fetchJSON(this.editorApi, {q: this.q, offset: this.offset, limit: this.limit,
             sortBy: this.sortBy, desc: this.desc});
+
         this.data = r.data;
-        this.counter.page.count = r.total;
+        this.counter.page.count = r.count;
+
+        this.isLoading = false;
     }
 
     private async updateCell({id, colName, value}: any) {
@@ -160,13 +181,15 @@ export default class DbEditor extends Vue {
         }
     }
 
-    private async removeEntry(id: number) {
-        const r = await fetchJSON(this.editorApi, {id}, "DELETE");
-
-        this.data.forEach((d, i) => {
-            if (d.id === id) {
-                this.data.splice(i, 1);
-            }
-        });
+    private removeEntry(id: number) {
+        if (confirm("Are you sure you want to remove this row?")) {
+            fetchJSON(this.editorApi, {id}, "DELETE").then(() => {
+                this.data.forEach((d, i) => {
+                    if (d.id === id) {
+                        this.data.splice(i, 1);
+                    }
+                });
+            });
+        }
     }
 }

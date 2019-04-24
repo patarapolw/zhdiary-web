@@ -11,8 +11,8 @@ Fully powered by Spaced-Repetition System; is online and workable on mobile.
 
 ## Screenshots
 
-![](/public/img/quiz.png)
+![](/public/screenshots/quiz.png)
 
-![](/public/img/quiz-sentence.png)
+![](/public/screenshots/quiz-sentence.png)
 
-![](/public/img/editor.png)
+![](/public/screenshots/editor.png)

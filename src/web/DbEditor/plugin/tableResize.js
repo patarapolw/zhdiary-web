@@ -59,6 +59,7 @@ export function resizableGrid(table) {
 
     function createDiv(height) {
         var div = document.createElement('div');
+        div.classList.add("resizer");
         div.style.top = 0;
         div.style.right = 0;
         div.style.width = '5px';

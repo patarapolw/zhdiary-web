@@ -1,6 +1,7 @@
 .vscode/
-# *.lock
+*.lock
 .idea/
+.venv/
 logs
 *.log
 npm-debug.log*

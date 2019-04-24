@@ -1,13 +1,14 @@
 import { toTitle, fetchJSON } from "../../util";
 import { Vue, Component, Prop, Emit } from "vue-property-decorator";
 import { CreateElement } from "vue";
+import MarkdownEditor from "./MarkdownEditor";
 import $ from "jquery";
 import { IColumn } from "..";
 import globalState from "../../shared";
 import EEOneLine from "./EEOneLine";
 import EETag from "./EETag";
 import EEDatetime from "./EEDatetime";
-import VueQuill from "./HtmlEditor";
+import EEMultiLine from "./EEMultiLine";
 
 @Component
 export default class EntryEditor extends Vue {
@@ -19,13 +20,11 @@ export default class EntryEditor extends Vue {
     private entry: any = {};
     private wasValidated = false;
 
-    private oldEntry: any = {};
-
     constructor(props: any) {
         super(props);
         $(document.body).on("mouseover", ".modal", () => {
             const $modal = $(".modal");
-            if ($("textarea:hover, .ql-editor:hover", $modal).length > 0) {
+            if ($("textarea:hover, .scroll:hover", $modal).length > 0) {
                 $modal.css("pointer-events", "none");
             } else {
                 $modal.css("pointer-events", "auto");
@@ -37,17 +36,43 @@ export default class EntryEditor extends Vue {
         const formContent: any[] = [];
 
         for (const col of this.cols) {
-            if (!this.showAll && typeof col.newEntry === "boolean" && !col.newEntry) {
+            if (!this.showAll && typeof col.newEntry === "boolean" && !this.entry.id) {
                 continue;
             }
 
+            const v = this.entry[col.name];
+
             switch (col.type) {
+                case "datetime":
+                    formContent.push(m(EEDatetime, {
+                        props: {col, value: this.entry[col.name] || ""},
+                        on: {input: (_v: string) => Vue.set(this.entry, col.name, _v)}
+                    }));
+                    break;
+                case "markdown":
+                    formContent.push(m("div", {
+                        class: ["form-group"]
+                    }, [
+                        m("label", col.label || toTitle(col.name)),
+                        m(MarkdownEditor, {
+                            props: {
+                                value: this.entry[col.name] || "",
+                                required: col.required
+                            },
+                            on: {input: (_v: string) => this.entry[col.name] = _v}
+                        }),
+                        col.required
+                        ? m("div", {
+                            class: ["invalid-feedback"]
+                        }, `${toTitle(col.name)} is required.`)
+                        : undefined
+                    ]));
+                    break;
                 case "one-line":
-                case "number":
                 case "list":
+                case "number":
                     if (col.name === "template") {
                         formContent.push(m(EEOneLine, {
-                            ref: "template",
                             props: {col, value: this.entry[col.name] || ""},
                             on: {input: (_v: string) => {
                                 Vue.set(this.entry, col.name, _v);
@@ -59,7 +84,6 @@ export default class EntryEditor extends Vue {
                                                     this.entry = Object.assign(this.entry, {
                                                         [col2.name]: t[col2.name]
                                                     });
-                                                    (this.$refs[`quill-${col2.name}`] as any).setValue(t[col2.name]);
                                                 }
                                             }
                                         }
@@ -79,31 +103,34 @@ export default class EntryEditor extends Vue {
                         }));
                     }
                     break;
-                case "datetime":
-                    formContent.push(m(EEDatetime, {
+                case "multi-line":
+                default:
+                    formContent.push(m(EEMultiLine, {
                         props: {col, value: this.entry[col.name] || ""},
                         on: {input: (_v: string) => Vue.set(this.entry, col.name, _v)}
                     }));
-                    break;
-                case "html":
-                    formContent.push(m("div", {
-                        class: ["form-group"]
-                    }, [
-                        m("label", col.label || toTitle(col.name)),
-                        m(VueQuill, {
-                            ref: `quill-${col.name}`,
-                            props: {
-                                value: this.entry[col.name] || "",
-                                required: col.required
-                            },
-                            on: {input: (_v: string) => Vue.set(this.entry, col.name, _v)}
-                        }),
-                        col.required
-                        ? m("div", {
-                            class: ["invalid-feedback"]
-                        }, `${toTitle(col.name)} is required.`)
-                        : undefined
-                    ]));
+            }
+        }
+
+        if (this.entry.data) {
+            console.log(this.entry);
+
+            formContent.push(m("h4", "Template data"));
+
+            for (const k of ["model", "template", "entry"]) {
+                const col = {name: k};
+                formContent.push(m(EEOneLine, {
+                    props: {col, value: this.entry[col.name] || "", readonly: true},
+                    on: {input: (_v: string) => Vue.set(this.entry, col.name, _v)}
+                }));
+            }
+
+            for (const k of Object.keys(this.entry.data)) {
+                const col = {name: k};
+                formContent.push(m(EEMultiLine, {
+                    props: {col, value: this.entry.data[col.name] || "", readonly: true},
+                    on: {input: (_v: string) => Vue.set(this.entry.data, col.name, _v)}
+                }));
             }
         }
 
@@ -153,23 +180,14 @@ export default class EntryEditor extends Vue {
     public async show(id?: number) {
         this.wasValidated = false;
         if (id) {
-            const r = await fetchJSON(this.editorApi, {q: `id:${id}`, offset: 0, limit: 1});
-            this.entry = r.data[0];
+            const r = await fetchJSON(this.editorApi + "findOne", {id});
+            this.entry = r;
+
+            console.log(r);
         } else {
             this.entry = {};
         }
         (this.$refs.entryEditor as any).show();
-    }
-
-    public updated() {
-        if (this.entry !== this.oldEntry) {
-            this.oldEntry = this.entry;
-            for (const col of this.cols) {
-                if (col.type === "html") {
-                    (this.$refs[`quill-${col.name}`] as any).setValue(this.entry[col.name]);
-                }
-            }
-        }
     }
 
     @Emit("save")
