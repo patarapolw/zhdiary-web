@@ -38,7 +38,10 @@ export default class EETag extends Vue {
                     m("button", {
                         class: ["input-group-text", "btn", "btn-outline-success"],
                         domProps: {disabled: this.value.indexOf("marked") !== -1},
-                        on: {click: () => this.value.push("marked")}
+                        on: {click: () => {
+                            this.value.push("marked");
+                            this.onInput(this.value);
+                        }}
                     }, "marked")
                 ])
             ]),
@@ -51,7 +54,7 @@ export default class EETag extends Vue {
     }
 
     @Emit("input")
-    private onInput(v: string) {
+    private onInput(v: string[]) {
         return v;
     }
 }

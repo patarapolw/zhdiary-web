@@ -38,7 +38,7 @@ export default class TreeView extends Vue {
 
     private async getTreeViewData() {
         this.isLoading = true;
-        this.data = await fetchJSON(globalState.deckApi + "treeview", {q: this.q});
+        this.data = await fetchJSON(globalState.quizApi + "treeview", {q: this.q});
         this.isLoading = false;
     }
 }

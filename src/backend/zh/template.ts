@@ -1,6 +1,6 @@
-import { IDbDataVocab, IDbDataSentence } from "../db";
-import showdown from "showdown";
 import h from "hyperscript";
+import TService from "turndown";
+import { IDbDataToken, IDbDataSentence } from "../db";
 
 export interface ITemplate {
     name: string;
@@ -10,10 +10,10 @@ export interface ITemplate {
     note?: string;
 }
 
-const sd = new showdown.Converter();
+const sd = new TService();
 
-export function getTemplateFromData(v: IDbDataVocab, ss: IDbDataSentence[]): ITemplate[] {
-    const back = sd.makeMarkdown(h("div", [
+export function getTemplateFromData(v: IDbDataToken, ss: IDbDataSentence[]): ITemplate[] {
+    const back = sd.turndown(h("div", [
         h("h3", v.simplified),
         v.traditional ? h("h4", v.traditional) : h("div"),
         h("div", v.pinyin),
@@ -27,7 +27,7 @@ export function getTemplateFromData(v: IDbDataVocab, ss: IDbDataSentence[]): ITe
     ]).outerHTML);
 
     return [
-        {name: "SE", front: sd.makeMarkdown(h("h4", v.simplified).outerHTML), back, entry: v.simplified},
-        {name: "EC", front: sd.makeMarkdown(h("h4", v.english).outerHTML), back, entry: v.simplified}
+        {name: "SE", front: sd.turndown(h("h4", v.simplified).outerHTML), back, entry: v.simplified!},
+        {name: "EC", front: sd.turndown(h("h4", v.english).outerHTML), back, entry: v.simplified!}
     ];
 }

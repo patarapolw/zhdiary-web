@@ -36,14 +36,13 @@ export default class QuizArea extends Vue {
                 },
                 on: {save: this.onEntryUpdated}
             }),
+            m("img", {
+                domProps: {src: "/asset/Spinner-1s-200px.svg"},
+                style: {height: "5em", display: this.isLoading ? "block" : "none", margin: "0 auto"}
+            }),
             m("div", {
                 class: ["quiz-area"]
-            }, [
-                m("img", {
-                    domProps: {src: "/asset/Spinner-1s-200px.svg"},
-                    style: {height: "5em", display: this.isLoading ? "block" : "none", margin: "0 auto"}
-                })
-            ])
+            })
         ]);
     }
 
@@ -67,7 +66,10 @@ export default class QuizArea extends Vue {
 
                 while (cards.length > 0) {
                     const card = cards.splice(0, 1)[0];
+                    console.log(card);
                     const c = await fetchJSON(globalState.quizApi + "render", card);
+
+                    card.id = c.id;
 
                     const $parent = $(h(`.c-container.c-${card.id}`, [
                         h(".c-all.c-data-front", {innerHTML: md2html(c.front)}),
@@ -142,6 +144,7 @@ export default class QuizArea extends Vue {
     private async onEntryUpdated(entry: any) {
         await fetchJSON(globalState.cardEditorApi, {id: this.currentId, update: entry}, "PUT");
         const $parent = $(`.c-${this.currentId}`);
+        console.log(entry);
 
         $(".c-data-front", $parent).html(md2html(entry.front));
         $(".c-data-back", $parent).html(md2html(entry.back));

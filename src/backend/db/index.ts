@@ -4,6 +4,7 @@ import moment from "moment";
 import crypto from "crypto";
 import { getOnlineSentence } from "../zh/juuku";
 import { ITemplate, getTemplateFromData } from "../zh/template";
+import XRegexp from "xregexp";
 dotenv.config();
 
 export const mongoClient = new MongoClient(process.env.MONGO_URI!, { useNewUrlParser: true });
@@ -18,7 +19,6 @@ export interface IDbUser {
 export interface IDbCard {
     _id?: ObjectID;
     userId: ObjectID;
-    deckId?: ObjectID;
     entry: string;
     template?: string;
     front: string;
@@ -31,36 +31,25 @@ export interface IDbCard {
     modified?: Date;
 }
 
-export interface IDbDeck {
+export interface IDbDataToken {
     _id?: ObjectID;
-    userId: ObjectID;
-    name: string;
-    isOpen?: boolean;
+    entry: string;
+    sup?: string[];
+    sub?: string[];
+    variant?: string[];
+    freq?: number;
+    vLevel?: number;
+    hLevel?: number[];
+    simplified?: string;
+    traditional?: string;
+    pinyin?: string;
+    english?: string;
+    tag?: string[];
 }
 
 export interface IDbDataSentence {
     _id?: ObjectID;
     chinese: string;
-    english: string;
-}
-
-export interface IDbDataToken {
-    _id?: ObjectID;
-    name: string;
-    sup?: string[];
-    sub?: string[];
-    var?: string[];
-    frequency?: number;
-    vocabLevel?: number;
-    hanziLevel?: number;
-    tag?: string[];
-}
-
-export interface IDbDataVocab {
-    _id?: ObjectID;
-    simplified: string;
-    traditional?: string;
-    pinyin: string;
     english: string;
 }
 
@@ -82,14 +71,10 @@ export interface IEntry {
 export class Database {
     public user: Collection<IDbUser>;
     public card: Collection<IDbCard>;
-    public deck: Collection<IDbDeck>;
-
-    public sentence: Collection<IDbDataSentence>;
+    
     public token: Collection<IDbDataToken>;
-    public vocab: Collection<IDbDataVocab>;
+    public sentence: Collection<IDbDataSentence>;
 
-    // private userDb: Db;
-    // private dataDb: Db;
     private db: Db;
 
     constructor() {
@@ -97,13 +82,8 @@ export class Database {
 
         this.user = this.db.collection("user");
         this.card = this.db.collection("card");
-        this.deck = this.db.collection("deck");
-
-        // this.dataDb = mongoClient.db("data");
-
-        this.sentence = this.db.collection("sentence");
         this.token = this.db.collection("token");
-        this.vocab = this.db.collection("vocab");
+        this.sentence = this.db.collection("sentence");
     }
 
     public async build() {
@@ -123,7 +103,6 @@ export class Database {
 
             return await Promise.all([
                 this.user.createIndex({email: 1}, {unique: true}),
-                this.deck.createIndex({userId: 1, name: 1}, {unique: true}),
                 this.card.createIndex({userId: 1, front: 1}, {unique: true}),
                 this.card.createIndex({entry: "text"})
             ]);
@@ -132,19 +111,19 @@ export class Database {
         return;
     }
 
-    public async create(userId: ObjectID, vocabs: string[]): Promise<ObjectID[]> {
-        const entries = await this.vocab.find({$or: [
-            {simplified: {$in: vocabs}},
-            {traditional: {$in: vocabs}}
+    public async create(userId: ObjectID, vocab: string): Promise<ObjectID[]> {
+        const entries = await this.token.find({$or: [
+            {simplified: vocab},
+            {traditional: vocab}
         ]}).toArray();
 
         const sentences = await Promise.all(entries.map((e) => {
-            return this.sentence.find({chinese: {$regex: e.simplified}}).toArray();
+            return this.sentence.find({chinese: {$regex: XRegexp.escape(e.simplified!)}}).toArray();
         }));
 
         const extras = await Promise.all(sentences.map((s, i) => {
             if (s.length < 10) {
-                return getOnlineSentence(entries[i].simplified);
+                return getOnlineSentence(entries[i].simplified!);
             } else {
                 return [];
             }
@@ -156,7 +135,7 @@ export class Database {
 
         const now = new Date();
 
-        return Object.values((await this.card.insertMany(ts.map((t) => {
+        const ids = Object.values((await this.card.insertMany(ts.map((t) => {
             return {
                 userId,
                 front: t.front,
@@ -166,31 +145,23 @@ export class Database {
                 created: now
             };
         }))).insertedIds);
+
+        return ids;
     }
 
-    public async update(userId: ObjectID, u: Partial<IEntry>) {
-        const c = await this.transformUpdate(userId, u);
+    public async update(u: Partial<IEntry>) {
+        const c = await this.transformUpdate(u);
         c.modified = new Date();
         return await this.card.updateOne({_id: u._id}, {$set: c});
     }
 
-    private async transformUpdate(userId: ObjectID, u: Partial<IEntry>): Promise<Partial<IDbCard>> {
+    private async transformUpdate(u: Partial<IEntry>): Promise<Partial<IDbCard>> {
         const output: Partial<IDbCard> = {};
 
         for (const k of Object.keys(u)) {
             const v = (u as any)[k];
 
-            if (k === "deck") {
-                const r = await this.deck.findOneAndUpdate(
-                    {userId, name: v},
-                    {
-                        $set: {userId, name: v}
-                    },
-                    {returnOriginal: false, upsert: true}
-                );
-                delete (u as any)[k];
-                output.deckId = r.value!._id;
-            } else if (["nextReview", "created", "modified"].indexOf(k) !== -1) {
+            if (["nextReview", "created", "modified"].indexOf(k) !== -1) {
                 output.nextReview = moment(v).toDate();
             } else {
                 (output as any)[k] = v;

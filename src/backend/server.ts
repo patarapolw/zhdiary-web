@@ -9,7 +9,6 @@ import bodyParser from "body-parser";
 import authRouter from "./route/auth";
 import apiRouter from "./route/api";
 import cardRouter from "./route/card";
-import deckRouter from "./route/deck";
 import quizRouter from "./route/quiz";
 dotenv.config();
 
@@ -62,7 +61,6 @@ app.use(authRouter);
 app.use(bodyParser.json());
 app.use("/api", apiRouter);
 app.use("/card", cardRouter);
-app.use("/deck", deckRouter);
 app.use("/quiz", quizRouter);
 
 app.get("/", (req, res) => {
@@ -76,5 +74,6 @@ app.post("/loginStatus", (req, res) => res.json(process.env.DEFAULT_USER || req.
 (async () => {
     await mongoClient.connect();
     await new Database().build();
+
     app.listen(port, () => console.log(`Server running on http://localhost:${port}`));
 })();

@@ -2,17 +2,18 @@ import P from "parsimmon";
 import XRegExp from "xregexp";
 import moment from "moment";
 
-export interface ISearchParserRule {
+export interface IQueryParserRule {
     anyOf?: string[];
     isString?: string[];
     isDate?: string[];
     isList?: string[];
+    flattenDates?: boolean;
 }
 
-export class SearchParser {
+export class QueryParser {
     private lang: P.Language;
 
-    constructor(rule: ISearchParserRule = {}) {
+    constructor(rule: IQueryParserRule = {}) {
         this.lang = P.createLanguage({
             Input: (r) => P.alt(
                 r.OrSentence,
@@ -55,6 +56,13 @@ export class SearchParser {
                 return {$and: [el[0], el[2]]};
             }),
             Expr: (r) => P.alt(
+                r.PosExpr,
+                r.NegExpr
+            ),
+            NegExpr: (r) => P.string("-").then(r.PosExpr).map((x) => {
+                return {$not: x};
+            }),
+            PosExpr: (r) => P.alt(
                 r.FullExpr,
                 r.PartialExpr
             ),
@@ -63,12 +71,10 @@ export class SearchParser {
 
                 if (rule.anyOf) {
                     for (const col of rule.anyOf) {
-                        let def = {[col]: {[col]: el}};
+                        let def = {[col]: el};
 
                         if ((!rule.isString && !rule.isList) || (rule.isString && rule.isString.indexOf(col) !== -1)) {
                             def = {[col]: {$regex: XRegExp.escape(el.toString())}};
-                        } else if (rule.isList) {
-                            def = {[col]: {$contains: el.toString()}};
                         }
 
                         expr.push(def);
@@ -95,8 +101,6 @@ export class SearchParser {
 // tslint:disable-next-line: prefer-const
                 let [k, op, v] = el;
 
-                const result = {} as any;
-
                 if (k === "is") {
                     if (v === "due") {
                         k = "nextReview";
@@ -108,6 +112,10 @@ export class SearchParser {
                     } else if (v === "new") {
                         k = "srsLevel";
                         v = "NULL";
+                    } else if (v === "marked") {
+                        k = "tag";
+                        op = "=";
+                        v = "marked";
                     }
                 }
 
@@ -122,11 +130,17 @@ export class SearchParser {
                     const m = /^([-+]?\d+)(\S+)$/.exec(v.toString());
 
                     if (m) {
-                        v = {$lte: moment().add(moment.duration(parseInt(m[1]), m[2] as any)).toDate()};
+                        v = moment().add(moment.duration(parseInt(m[1]), m[2] as any)).toDate();
                         op = "<=";
                     } else if (v === "now") {
                         v = moment().toDate();
                         op = "<=";
+                    }
+                }
+
+                if (rule.flattenDates) {
+                    if (moment.isDate(v)) {
+                        v = v.toISOString();
                     }
                 }
 
@@ -157,19 +171,7 @@ export class SearchParser {
                     default:
                 }
 
-                let k0 = k;
-                if (k === "template") {
-                    k0 = "template.name";
-                } else if (k === "model") {
-                    k0 = "template.model";
-                } else if (k === "entry") {
-                    k0 = "note.name";
-                }
-
-                return {$or: [
-                    {[k0]: v},
-                    {[`data.${k}`]: v}
-                ]};
+                return {[k]: v};
             }),
             Value: (r) => P.alt(
                 r.Number,
@@ -180,7 +182,7 @@ export class SearchParser {
                 r.RawString,
                 r.QuoteString
             ),
-            RawString: () => P.regexp(/[^" :>=<~]+/),
+            RawString: () => P.regexp(/[^-" :>=<~]+/),
             QuoteString: (r) => r.Quote.then(r.Value).skip(r.Quote),
             Quote: () => P.string('"'),
             Op: () => P.alt(
@@ -197,7 +199,7 @@ export class SearchParser {
     }
 
     public parse(s?: string) {
-        const r = this.lang.Input.parse(s || "");
+        const r = this.lang.Input.parse((s || "").trim());
         if (!r.status) {
             return {};
         } else {
@@ -206,4 +208,4 @@ export class SearchParser {
     }
 }
 
-export default SearchParser;
+export default QueryParser;

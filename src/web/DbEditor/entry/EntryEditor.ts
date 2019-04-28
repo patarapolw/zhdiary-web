@@ -182,8 +182,6 @@ export default class EntryEditor extends Vue {
         if (id) {
             const r = await fetchJSON(this.editorApi + "findOne", {id});
             this.entry = r;
-
-            console.log(r);
         } else {
             this.entry = {};
         }

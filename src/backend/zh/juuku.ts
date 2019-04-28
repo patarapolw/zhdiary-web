@@ -1,6 +1,6 @@
-import { IDbDataSentence } from "../db";
 import cheerio from "cheerio";
 import fetch from "node-fetch";
+import { IDbDataSentence } from "../db";
 
 export async function getOnlineSentence(v: string): Promise<IDbDataSentence[]> {
     const url = new URL("http://www.jukuu.com/search.php");

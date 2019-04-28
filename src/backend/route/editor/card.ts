@@ -1,13 +1,13 @@
 import { Request, Response, Router } from "express";
-import SearchResource from "../../db/SearchResource";
 import Database from "../../db";
 import { ObjectID } from "bson";
 import asyncHandler from "express-async-handler";
+import SearchResource from "../../search/SearchResource";
 
 class EditorController {
     public static async find(req: Request, res: Response): Promise<Response> {
-        const rSearch = new SearchResource();
-        const cond = rSearch.parse(req.body.q);
+        const sr = new SearchResource();
+
         const userId = res.locals.userId;
 
         const offset: number = req.body.offset;
@@ -15,7 +15,7 @@ class EditorController {
         const sortBy: string = req.body.sortBy || "deck";
         const desc: boolean = req.body.desc || false;
 
-        const q = await rSearch.getQuery(userId, cond, [
+        const q = await sr.getMongoQuery(userId, req.body.q, [
             {$facet: {
                 data: [
                     {$sort: {[sortBy]: desc ? -1 : 1}},
@@ -27,7 +27,7 @@ class EditorController {
                     count: {$sum: 1}
                 }}]
             }}
-        ]).toArray();
+        ], true).toArray();
 
         return res.json({
             data: q[0].data,
@@ -40,7 +40,7 @@ class EditorController {
         const cond = {id: req.body.id};
         const userId = res.locals.userId;
 
-        const q = await rSearch.getQuery(userId, cond, [
+        const q = await rSearch.getMongoQuery(userId, cond, [
             {$limit: 1}
         ]).toArray();
         const c: any = q[0];
@@ -50,8 +50,8 @@ class EditorController {
     public static async create(req: Request, res: Response): Promise<Response> {
         const db = new Database();
         const userId = res.locals.userId;
-        const vocab: string | string[] = req.body.create;
-        const _id = (await db.create(userId, typeof vocab === "string" ? [vocab] : vocab))[0];
+        const vocab: string = req.body.create;
+        const _id = (await db.create(userId, vocab))[0];
 
         return res.json({id: _id.toHexString()});
     }
@@ -67,14 +67,14 @@ class EditorController {
 
         if (req.body.update) {
             const u = req.body.update;
-            await db.update(userId, {
+            await db.update({
                 _id: new ObjectID(id),
                 ...u
             });
         } else {
             const fieldName: string = req.body.fieldName;
             const fieldData: any = req.body.fieldData;
-            await db.update(userId, {
+            await db.update({
                 _id: new ObjectID(id),
                 [fieldName]: fieldData
             });
