@@ -118,7 +118,7 @@ export class Database {
         ]}).toArray();
 
         const sentences = await Promise.all(entries.map((e) => {
-            return this.sentence.find({chinese: {$regex: XRegexp.escape(e.simplified!)}}).toArray();
+            return this.sentence.find({chinese: {$regex: XRegexp.escape(e.simplified!)}}).limit(10).toArray();
         }));
 
         const extras = await Promise.all(sentences.map((s, i) => {

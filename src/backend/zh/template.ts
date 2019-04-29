@@ -27,7 +27,7 @@ export function getTemplateFromData(v: IDbDataToken, ss: IDbDataSentence[]): ITe
     ]).outerHTML);
 
     return [
-        {name: "SE", front: sd.turndown(h("h4", v.simplified).outerHTML), back, entry: v.simplified!},
-        {name: "EC", front: sd.turndown(h("h4", v.english).outerHTML), back, entry: v.simplified!}
+        {name: "EC", front: sd.turndown(h("h4", v.english).outerHTML), back, entry: v.simplified!},
+        {name: "SE", front: sd.turndown(h("h4", v.simplified).outerHTML), back, entry: v.simplified!}
     ];
 }
