@@ -26,19 +26,15 @@ export class SearchResource {
         return this.db.token.aggregate<any>([
             {$lookup: {
                 from: "card",
-                let: {entry: "$name"},
-                pipeline: [
-                    {$match: {
-                        userId,
-                        entry: "$$name"
-                    }}
-                ],
+                localField: "entry",
+                foreignField: "entry",
                 as: "c"
             }},
             {$unwind: {
                 path: "$c",
                 preserveNullAndEmptyArrays: !isUser
             }},
+            {$match: isUser ? {userId} : {$or: [{userId}, {userId: {$exists: false}}]}},
             {$project: {
                 entry: 1,
                 sub: 1,
@@ -52,7 +48,7 @@ export class SearchResource {
                 traditional: 1,
                 pinyin: 1,
                 english: 1,
-                cardId: "$c._id",
+                cardId: {$toString: "$c._id"},
                 front: "$c.front",
                 back: "$c.back",
                 mnemonic: "$c.mnemonic",

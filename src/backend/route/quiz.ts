@@ -137,7 +137,7 @@ class QuizController {
         }
 
         const cards = await sr.getMongoQuery(userId, {$and: andCond}, [
-            {$project: {id: 1, entry: 1}}
+            {$project: {id: "$cardId", entry: 1}}
         ]).toArray();
 
         return res.json(cards);
@@ -156,10 +156,10 @@ class QuizController {
             _id = (await db.create(userId, entry))[0];
         }
 
-        const card = (await db.card.find({_id}).project({
-            front: 1, back: 1,
-            template: 1, note: 1
-        }).limit(1).toArray())[0];
+        const card = (await db.card.aggregate([
+            {$match: {_id}},
+            {$project: {id: {$toString: "$_id"}, front: 1, back: 1}}
+        ]).limit(1).toArray())[0];
 
         return res.json(card);
     }
