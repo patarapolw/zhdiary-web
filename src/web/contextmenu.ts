@@ -1,33 +1,23 @@
-import $ from "jquery";
 import "jquery-contextmenu";
-import "jquery-contextmenu/dist/jquery.contextMenu.css";
+import $ from "jquery";
+import "jquery-contextmenu/dist/jquery.contextMenu.min.css";
 
-// @ts-ignore
-$.contextMenu({
-    selector: ".tree-text",
-    items: {
-        rename: {
-            name: "Rename",
-            callback(key: any, opt: any) {
-                const item = opt.$trigger.data();
-                console.log(item);
-            }
+$(() => {
+    // $("#quiz-ui")
+    $
+    // @ts-ignore
+    .contextMenu({
+        selector: ".tree-text",
+        callback(key: string, opt: any) {
+            opt.$trigger.data(key)();
         },
-        export: {
-            name: "Export",
-            callback(key: any, opt: any) {
-                const item = opt.$trigger.data();
-                console.log(item);
-            }
-        },
-        delete: {
-            name: "Delete Deck",
-            callback(key: any, opt: any) {
-                const item = opt.$trigger.data();
-                if (confirm("Are you sure you want to delete?")) {
-                    item.delete();
-                }
-            }
+        items: {
+            due: {name: "Review due"},
+            leech: {name: "Review leech"},
+            new: {name: "Review new"},
+            dueAndNew: {name: "Review due and new"},
+            separator1: "-----",
+            all: {name: "Review all"}
         }
-    }
+    });
 });
