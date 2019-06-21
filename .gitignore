@@ -99,7 +99,7 @@ venv.bak/
 .dmypy.json
 dmypy.json
 .pyre/
-
+.DS_Store
 /public/js
 /.vscode/
 /*.lock
