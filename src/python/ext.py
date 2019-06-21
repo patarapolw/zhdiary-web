@@ -1,5 +1,6 @@
 from flask_pymongo import PyMongo
 from authlib.flask.client import OAuth
+import sqlite3
 
 import os
 
@@ -17,3 +18,6 @@ auth0 = oauth.register(
         'scope': 'openid profile email',
     },
 )
+
+zh = sqlite3.connect("asset/zh.db")
+zh.row_factory = sqlite3.Row

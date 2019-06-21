@@ -33,8 +33,11 @@
     "xregexp": "^4.2.4"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^5.4.0",
+    "better-sqlite3": "^5.4.0",
     "css-loader": "^3.0.0",
     "dotenv": "^8.0.0",
+    "esm": "^3.2.25",
     "expose-loader": "^0.7.5",
     "file-loader": "^4.0.0",
     "node-sass": "^4.12.0",

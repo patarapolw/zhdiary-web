@@ -8,7 +8,6 @@ from .auth import api_auth
 
 from .api.editor import api_editor
 from .api.io import api_io
-from .api.media import api_media
 from .api.quiz import api_quiz
 from .api.util import api_util
 
@@ -25,7 +24,6 @@ CORS(app, resources={"/api/*": {"origins": "*"}})
 app.register_blueprint(api_auth)
 app.register_blueprint(api_editor)
 app.register_blueprint(api_io)
-app.register_blueprint(api_media)
 app.register_blueprint(api_quiz)
 app.register_blueprint(api_util)
 

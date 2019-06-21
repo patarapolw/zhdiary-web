@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify, Response
 
 from ..auth import auth
-from ..db import Db
+from src.python.engine.db import Db
 
 api_editor = Blueprint('editor', __name__, url_prefix="/api/editor")
 

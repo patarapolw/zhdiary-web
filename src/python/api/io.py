@@ -1,8 +1,9 @@
 from flask import Blueprint, request, jsonify, send_file
 from uuid import uuid4
+import json
 
 from ..config import Config
-from ..db import Db
+from src.python.engine.db import Db
 from ..auth import auth
 
 api_io = Blueprint("io", __name__, url_prefix="/api/io")
@@ -15,8 +16,8 @@ def r_restore():
     f_id = str(uuid4())
     f.save(str(Config.UPLOAD_FOLDER.joinpath(f_id)))
 
-    import_db = Db(str(Config.UPLOAD_FOLDER.joinpath(f_id)))
-    Db.insert_many(import_db.get_all())
+    with Config.UPLOAD_FOLDER.joinpath(f_id).open() as f:
+        Db.insert_many([json.load(r.strip()) for r in f if r.strip()])
 
     return jsonify({
         "id": f_id
@@ -27,6 +28,9 @@ def r_restore():
 @auth.login_required
 def r_backup():
     filename = str(Config.UPLOAD_FOLDER.joinpath(str(uuid4())))
-    Db.download_all(str(Config.UPLOAD_FOLDER.joinpath(filename)))
 
-    return send_file(filename, attachment_filename=f"backup.db", as_attachment=True, cache_timeout=-1)
+    with Config.UPLOAD_FOLDER.joinpath(filename).open("w") as f:
+        for row in Db.download_all():
+            f.write(json.dumps(row) + "\n")
+
+    return send_file(filename, attachment_filename="zhdiary.ndjson", as_attachment=True, cache_timeout=-1)
