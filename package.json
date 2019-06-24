@@ -77,6 +77,7 @@
     "xregexp": "^4.2.4"
   },
   "devDependencies": {
+    "concurrently": "^4.1.0",
     "ts-node": "^8.3.0",
     "ts-node-dev": "^1.0.0-pre.40",
     "tsconfig-paths": "^3.8.0",
@@ -86,13 +87,13 @@
     "webpack-dev-server": "^3.7.1"
   },
   "scripts": {
-    "start": "node .",
+    "start": "node -r esm .",
     "dev": "concurrently 'yarn run js:dev' 'yarn run node:dev'",
     "js:dev": "rimraf public/js && webpack-dev-server --config webpack.dev.js",
     "node:dev": "ts-node-dev -r esm src/node/server.ts",
     "build": "yarn run node:build && yarn run js:build",
     "js:build": "rimraf public/js dist && webpack --config webpack.prod.js",
-    "node:build": "tsc -p src/backend"
+    "node:build": "tsc -p src/node"
   },
   "engines": {
     "yarn": "*"

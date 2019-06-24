@@ -43,9 +43,6 @@ export async function fetchJSON(url: string, data: any = {}, method: string = "P
                     text: res.statusText,
                     icon: "error"
                 });
-                if (res.status === 401) {
-                    location.href = "/api/auth/login"
-                }
 
                 return { error: e };
             }
