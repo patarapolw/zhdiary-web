@@ -4,15 +4,14 @@ A website for memorizing Chinese vocab and sentences with pure flashcards and no
 
 Fully powered by Spaced-Repetition System; is online and workable on mobile.
 
-## Usage
+## Running in development mode
 
-- By default, there will be no template, but to activate the template, type `v/生词`, or `v/` anything, depending on the the vocab, and the template will appear.
-- Use `s/` for sentences.
+Create a `.env` file filled with
 
-## Screenshots
+```
+MONGO_URI=<your_mongo_uri>
+DEFAULT_USER=<any_email>
+SECRET_KEY=<any_secret_keyword>
+```
 
-![](/public/screenshots/quiz.png)
-
-![](/public/screenshots/quiz-sentence.png)
-
-![](/public/screenshots/editor.png)
+Run `yarn install`, then `yarn run dev`.

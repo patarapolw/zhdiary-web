@@ -5,6 +5,8 @@ import needUserId from "../middleware/needUserId";
 import asyncHandler from "express-async-handler";
 import Database from "../engine/db";
 import { generateSecret } from "../util";
+import dotenv from "dotenv";
+dotenv.config();
 
 const router = Router();
 
@@ -76,6 +78,10 @@ router.get("/profile", tokenAuth.optional, (req, res) => {
         return res.json({
             name: displayName,
             picture
+        });
+    } else if (process.env.DEFAULT_USER) {
+        return res.json({
+            email: process.env.DEFAULT_USER
         });
     } else {
         return res.json(null);
