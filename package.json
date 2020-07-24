@@ -15,7 +15,7 @@
     "@types/express-fileupload": "^1.1.0",
     "@types/express-jwt": "^0.0.42",
     "@types/express-session": "^1.15.12",
-    "@types/hyperscript": "^0.0.3",
+    "@types/hyperscript": "^0.0.4",
     "@types/jquery": "^3.3.29",
     "@types/jsonwebtoken": "^8.3.2",
     "@types/mongodb": "^3.1.25",
